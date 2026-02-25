@@ -1,0 +1,32 @@
+Act as an expert React Native and Expo developer specializing in hypercasual games, high-performance animations, and highly aesthetic UI design. I want you to build a complete, single-screen hypercasual reflex game.
+
+Tech Stack: React Native, Expo, NativeWind (for styling), react-native-reanimated (for 60fps smooth animations), and expo-haptics (for vibration feedback).
+
+Visual Style & UI (The "Antigravity" Architecture):
+- The theme is entirely Dark Mode / Cyberpunk. Deep black or very dark purple background.
+- Elements should have high-contrast Neon glows (Cyan, Hot Pink, Electric Blue) using drop shadows and glowing borders.
+- Typography should be massive, bold, and clean (displaying the score).
+- The overall feel must be incredibly smooth, premium, and "juicy" (highly responsive to touch).
+
+Core Game Mechanics:
+1. The Target: A stationary, glowing neon circular ring perfectly centered on the screen.
+2. The Shrinking Ring: A larger glowing ring that spawns outside the screen bounds and rapidly shrinks towards the center.
+3. The Action: The entire screen acts as a touchable area. The user must tap the screen exactly when the "Shrinking Ring" overlaps the "Target Ring".
+4. Hit Detection & Tolerance: Create a margin of error. If the user taps when the shrinking ring is within the target ring's boundaries, it's a SUCCESS. If tapped too early, too late, or if the ring shrinks past the center to zero, it's a GAME OVER.
+
+Game Loop & Feedback:
+- On SUCCESS: 
+  - Increment the Score by 1.
+  - Trigger `expo-haptics` (ImpactFeedbackStyle.Heavy).
+  - Briefly flash the screen or the target ring with a bright neon color (success animation).
+  - Immediately spawn a new shrinking ring, but slightly FASTER than the previous one (increase difficulty progressively).
+- On GAME OVER:
+  - Trigger `expo-haptics` (NotificationFeedbackType.Error).
+  - Stop all animations.
+  - Display a "GAME OVER" glowing text overlay with the final score and a "Best Score" (stored locally).
+  - Show a stylish "Tap to Restart" neon button.
+
+Requirements for the Code:
+- Use `useSharedValue`, `withTiming`, `withRepeat`, and `withSequence` from react-native-reanimated for all ring animations. Do NOT use standard React Native Animated for the core loop to avoid frame drops.
+- Structure the code cleanly into functional components (e.g., GameBoard, Ring, ScoreDisplay).
+- Provide the complete, runnable code for `App.js` (or `App.tsx`) and any necessary configuration so I can run it immediately in an Expo environment.
