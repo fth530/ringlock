@@ -32,7 +32,7 @@ const TOLERANCE = 24;
 const MAX_R = Math.max(SCREEN_W, SCREEN_H) * 0.58;
 const INITIAL_DUR = 2200;
 const MIN_DUR = 460;
-const DUR_STEP = 55;
+const DUR_STEP = 48;
 
 // How close the target ring center can get to the screen edges
 const EDGE_PAD = TARGET_R + 28;
