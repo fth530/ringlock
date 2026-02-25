@@ -24,53 +24,85 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 
+// ─── Constants ────────────────────────────────────────────────────────────────
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
-const CX = SCREEN_W / 2;
-const CY = SCREEN_H / 2;
 
-const TARGET_R = 68;
-const TOLERANCE = 26;
-const MAX_R = Math.max(SCREEN_W, SCREEN_H) * 0.56;
-const INITIAL_DUR = 2300;
-const MIN_DUR = 480;
-const DUR_STEP = 58;
+const TARGET_R = 62;
+const TOLERANCE = 24;
+const MAX_R = Math.max(SCREEN_W, SCREEN_H) * 0.58;
+const INITIAL_DUR = 2200;
+const MIN_DUR = 460;
+const DUR_STEP = 55;
 
+// How close the target ring center can get to the screen edges
+const EDGE_PAD = TARGET_R + 28;
+
+// Derived ring sizes
+const GLOW_MID_R = TARGET_R + 14;
+const GLOW_OUT_R = TARGET_R + 36;
+const SHRINK_GLOW_EXTRA = 15;
+const SHRINK_GLOW_FAINT_EXTRA = 36;
+
+// ─── Palette ──────────────────────────────────────────────────────────────────
 const C = {
   bg: "#030310",
   bgMid: "#08082a",
   cyan: "#00FFE8",
   cyanFaint: "rgba(0,255,232,0.06)",
-  cyanSoft: "rgba(0,255,232,0.16)",
+  cyanSoft: "rgba(0,255,232,0.15)",
   pink: "#FF0066",
   pinkFaint: "rgba(255,0,102,0.06)",
-  pinkSoft: "rgba(255,0,102,0.16)",
+  pinkSoft: "rgba(255,0,102,0.15)",
   subtleText: "rgba(0,255,232,0.45)",
-  overlayBg: "rgba(3,3,16,0.95)",
+  overlayBg: "rgba(3,3,16,0.96)",
 };
 
-type Phase = "idle" | "playing" | "gameover";
+type Phase = "menu" | "playing" | "gameover";
 
-// ─── Grid background ────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function randomTargetPos(topInset: number, botInset: number) {
+  const topY =
+    (Platform.OS === "web" ? Math.max(topInset, 67) : topInset) + 170;
+  const botY =
+    SCREEN_H - (Platform.OS === "web" ? Math.max(botInset, 34) : botInset) - EDGE_PAD;
+  const minX = EDGE_PAD;
+  const maxX = SCREEN_W - EDGE_PAD;
+  const minY = topY;
+  const maxY = botY;
+  return {
+    x: minX + Math.random() * (maxX - minX),
+    y: minY + Math.random() * (maxY - minY),
+  };
+}
+
+// ─── Grid background ──────────────────────────────────────────────────────────
 function GridBackground() {
   const lines: React.ReactNode[] = [];
   const step = 52;
   for (let x = 0; x <= SCREEN_W; x += step)
     lines.push(
-      <View key={`v${x}`} style={[s.gridLine, { left: x, width: 1, height: SCREEN_H }]} />
+      <View
+        key={`v${x}`}
+        style={[s.gridLine, { left: x, width: 1, height: SCREEN_H }]}
+      />
     );
   for (let y = 0; y <= SCREEN_H; y += step)
     lines.push(
-      <View key={`h${y}`} style={[s.gridLine, { top: y, height: 1, width: SCREEN_W }]} />
+      <View
+        key={`h${y}`}
+        style={[s.gridLine, { top: y, height: 1, width: SCREEN_W }]}
+      />
     );
-  return <View style={StyleSheet.absoluteFill} pointerEvents="none">{lines}</View>;
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      {lines}
+    </View>
+  );
 }
 
-// ─── Target ring ─────────────────────────────────────────────────────────────
-// Anchor is at screen center (CX, CY). All elements use translateX/Y to center.
-const TARGET_D = TARGET_R * 2;
-const GLOW_MID_R = TARGET_R + 14;
-const GLOW_OUT_R = TARGET_R + 38;
-
+// ─── Target ring ──────────────────────────────────────────────────────────────
+// Rendered inside an animated anchor View positioned at target center.
+// Each child uses transform to center itself around (0,0) of the anchor.
 function TargetRing({
   scale,
   colorProgress,
@@ -81,11 +113,7 @@ function TargetRing({
   const ringStyle = useAnimatedStyle(() => {
     const bc = interpolateColor(colorProgress.value, [0, 1], [C.cyan, C.pink]);
     return {
-      transform: [
-        { translateX: -TARGET_R },
-        { translateY: -TARGET_R },
-        { scale: scale.value },
-      ],
+      transform: [{ translateX: -TARGET_R }, { translateY: -TARGET_R }, { scale: scale.value }],
       borderColor: bc,
       shadowColor: bc,
     };
@@ -94,11 +122,7 @@ function TargetRing({
   const glowMidStyle = useAnimatedStyle(() => {
     const bc = interpolateColor(colorProgress.value, [0, 1], [C.cyanSoft, C.pinkSoft]);
     return {
-      transform: [
-        { translateX: -GLOW_MID_R },
-        { translateY: -GLOW_MID_R },
-        { scale: scale.value },
-      ],
+      transform: [{ translateX: -GLOW_MID_R }, { translateY: -GLOW_MID_R }, { scale: scale.value }],
       borderColor: bc,
     };
   });
@@ -106,17 +130,13 @@ function TargetRing({
   const glowOutStyle = useAnimatedStyle(() => {
     const bc = interpolateColor(colorProgress.value, [0, 1], [C.cyanFaint, C.pinkFaint]);
     return {
-      transform: [
-        { translateX: -GLOW_OUT_R },
-        { translateY: -GLOW_OUT_R },
-        { scale: scale.value },
-      ],
+      transform: [{ translateX: -GLOW_OUT_R }, { translateY: -GLOW_OUT_R }, { scale: scale.value }],
       backgroundColor: bc,
     };
   });
 
   return (
-    <View style={s.centerAnchor} pointerEvents="none">
+    <>
       <Animated.View
         style={[
           {
@@ -144,8 +164,8 @@ function TargetRing({
         style={[
           {
             position: "absolute",
-            width: TARGET_D,
-            height: TARGET_D,
+            width: TARGET_R * 2,
+            height: TARGET_R * 2,
             borderRadius: TARGET_R,
             borderWidth: 3,
             shadowRadius: 18,
@@ -155,14 +175,12 @@ function TargetRing({
           ringStyle,
         ]}
       />
-    </View>
+    </>
   );
 }
 
 // ─── Shrinking ring ───────────────────────────────────────────────────────────
-const SHRINK_GLOW_EXTRA = 16;
-const SHRINK_GLOW_FAINT_EXTRA = 38;
-
+// Also rendered inside the same anchor View — shares the same center.
 function ShrinkingRing({ radius }: { radius: SharedValue<number> }) {
   const ringStyle = useAnimatedStyle(() => {
     const r = radius.value;
@@ -198,11 +216,41 @@ function ShrinkingRing({ radius }: { radius: SharedValue<number> }) {
   });
 
   return (
-    <View style={s.centerAnchor} pointerEvents="none">
+    <>
       <Animated.View style={[s.shrinkGlowFaint, glowFaintStyle]} />
       <Animated.View style={[s.shrinkGlowMid, glowMidStyle]} />
       <Animated.View style={[s.shrinkRing, ringStyle]} />
-    </View>
+    </>
+  );
+}
+
+// ─── Rings anchor (animated to target position) ───────────────────────────────
+function RingsAnchor({
+  anchorX,
+  anchorY,
+  ringRadius,
+  targetScale,
+  targetColor,
+}: {
+  anchorX: SharedValue<number>;
+  anchorY: SharedValue<number>;
+  ringRadius: SharedValue<number>;
+  targetScale: SharedValue<number>;
+  targetColor: SharedValue<number>;
+}) {
+  const anchorStyle = useAnimatedStyle(() => ({
+    left: anchorX.value,
+    top: anchorY.value,
+  }));
+
+  return (
+    <Animated.View
+      style={[s.ringAnchor, anchorStyle]}
+      pointerEvents="none"
+    >
+      <TargetRing scale={targetScale} colorProgress={targetColor} />
+      <ShrinkingRing radius={ringRadius} />
+    </Animated.View>
   );
 }
 
@@ -217,31 +265,87 @@ function FlashOverlay({ opacity }: { opacity: SharedValue<number> }) {
   );
 }
 
+// ─── Main menu ────────────────────────────────────────────────────────────────
+function MainMenu({
+  onPlay,
+  bestScore,
+  topPad,
+  botPad,
+}: {
+  onPlay: () => void;
+  bestScore: number;
+  topPad: number;
+  botPad: number;
+}) {
+  return (
+    <View style={[StyleSheet.absoluteFill, s.menuWrap]}>
+      {bestScore > 0 && (
+        <View style={[s.menuTopInfo, { top: topPad + 20 }]}>
+          <Text style={s.menuBestLabel}>BEST</Text>
+          <Text style={s.menuBestScore}>{bestScore}</Text>
+        </View>
+      )}
+
+      <View style={s.menuCenter}>
+        <Pressable
+          onPress={onPlay}
+          style={({ pressed }) => [s.playBtnOuter, pressed && s.playBtnPressed]}
+        >
+          <View style={s.playBtnInner}>
+            <Text style={s.playText}>PLAY</Text>
+          </View>
+        </Pressable>
+      </View>
+
+      <View style={[s.menuBottom, { paddingBottom: botPad + 24 }]}>
+        <Text style={s.menuHint}>TAP THE RING AT JUST THE RIGHT MOMENT</Text>
+      </View>
+    </View>
+  );
+}
+
 // ─── Game over overlay ────────────────────────────────────────────────────────
 function GameOverOverlay({
-  opacity,
   score,
   bestScore,
+  onRestart,
+  onMenu,
 }: {
-  opacity: SharedValue<number>;
   score: number;
   bestScore: number;
+  onRestart: () => void;
+  onMenu: () => void;
 }) {
+  const opacity = useSharedValue(0);
+
+  useEffect(() => {
+    opacity.value = withTiming(1, { duration: 420 });
+  }, []);
+
   const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
+
   return (
-    <Animated.View
-      style={[StyleSheet.absoluteFill, s.gameOverWrap, style]}
-      pointerEvents="none"
-    >
+    <Animated.View style={[StyleSheet.absoluteFill, s.gameOverWrap, style]}>
       <Text style={s.gameOverTitle}>GAME OVER</Text>
       <View style={s.separator} />
       <Text style={s.gameOverScoreLabel}>SCORE</Text>
       <Text style={s.gameOverScore}>{score}</Text>
       <Text style={s.bestLine}>BEST  {bestScore}</Text>
-      <View style={s.restartBtnOuter}>
-        <View style={s.restartBtnInner}>
-          <Text style={s.restartText}>TAP TO RESTART</Text>
-        </View>
+
+      <View style={s.gameOverButtons}>
+        <Pressable
+          onPress={onRestart}
+          style={({ pressed }) => [s.goBtnOuter, s.goBtnPrimary, pressed && s.goBtnPressed]}
+        >
+          <Text style={[s.goBtnText, s.goBtnTextPrimary]}>RESTART</Text>
+        </Pressable>
+
+        <Pressable
+          onPress={onMenu}
+          style={({ pressed }) => [s.goBtnOuter, s.goBtnSecondary, pressed && s.goBtnPressed]}
+        >
+          <Text style={[s.goBtnText, s.goBtnTextSecondary]}>MAIN MENU</Text>
+        </Pressable>
       </View>
     </Animated.View>
   );
@@ -250,22 +354,25 @@ function GameOverOverlay({
 // ─── Main game screen ─────────────────────────────────────────────────────────
 export default function GameScreen() {
   const insets = useSafeAreaInsets();
+  const topPad = Platform.OS === "web" ? Math.max(insets.top, 67) : insets.top;
+  const botPad = Platform.OS === "web" ? Math.max(insets.bottom, 34) : insets.bottom;
 
   const [score, setScore] = useState(0);
   const [bestScore, setBestScore] = useState(0);
-  const [phase, setPhase] = useState<Phase>("idle");
+  const [phase, setPhase] = useState<Phase>("menu");
   const [finalScore, setFinalScore] = useState(0);
 
-  const phaseRef = useRef<Phase>("idle");
+  const phaseRef = useRef<Phase>("menu");
   const scoreRef = useRef(0);
   const durRef = useRef(INITIAL_DUR);
 
   // Shared values
-  const ringRadius = useSharedValue(MAX_R);
+  const ringRadius = useSharedValue(0);
   const flashOpacity = useSharedValue(0);
   const targetScale = useSharedValue(1);
-  const targetColor = useSharedValue(0); // 0 = cyan, 1 = pink
-  const overlayOpacity = useSharedValue(0);
+  const targetColor = useSharedValue(0);
+  const anchorX = useSharedValue(SCREEN_W / 2);
+  const anchorY = useSharedValue(SCREEN_H / 2);
 
   useEffect(() => {
     AsyncStorage.getItem("antigravity_best").then((v) => {
@@ -273,15 +380,18 @@ export default function GameScreen() {
     });
   }, []);
 
-  const saveBest = useCallback((s: number) => {
-    AsyncStorage.getItem("antigravity_best").then((v) => {
-      const prev = v ? parseInt(v, 10) : 0;
-      if (s > prev) {
-        AsyncStorage.setItem("antigravity_best", String(s));
-        setBestScore(s);
-      }
-    });
-  }, []);
+  const saveBest = useCallback(
+    (s: number) => {
+      AsyncStorage.getItem("antigravity_best").then((v) => {
+        const prev = v ? parseInt(v, 10) : 0;
+        if (s > prev) {
+          AsyncStorage.setItem("antigravity_best", String(s));
+          setBestScore(s);
+        }
+      });
+    },
+    []
+  );
 
   const doGameOver = useCallback(() => {
     if (phaseRef.current !== "playing") return;
@@ -291,17 +401,25 @@ export default function GameScreen() {
     setPhase("gameover");
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     saveBest(s);
-    overlayOpacity.value = withTiming(1, { duration: 450 });
-  }, [saveBest, overlayOpacity]);
+  }, [saveBest]);
 
   const spawnRing = useCallback(
     (dur: number) => {
+      // Pick a new random target position
+      const pos = randomTargetPos(topPad, botPad);
+      anchorX.value = pos.x;
+      anchorY.value = pos.y;
+
       ringRadius.value = MAX_R;
-      ringRadius.value = withTiming(0, { duration: dur, easing: Easing.linear }, (done) => {
-        if (done) runOnJS(doGameOver)();
-      });
+      ringRadius.value = withTiming(
+        0,
+        { duration: dur, easing: Easing.linear },
+        (done) => {
+          if (done) runOnJS(doGameOver)();
+        }
+      );
     },
-    [doGameOver, ringRadius]
+    [doGameOver, ringRadius, anchorX, anchorY, topPad, botPad]
   );
 
   const doHit = useCallback(() => {
@@ -311,49 +429,54 @@ export default function GameScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
 
     flashOpacity.value = withSequence(
-      withTiming(0.38, { duration: 50 }),
+      withTiming(0.36, { duration: 50 }),
       withTiming(0, { duration: 200 })
     );
     targetScale.value = withSequence(
-      withTiming(1.38, { duration: 65 }),
-      withTiming(1, { duration: 200, easing: Easing.out(Easing.quad) })
+      withTiming(1.4, { duration: 65 }),
+      withTiming(1, { duration: 210, easing: Easing.out(Easing.quad) })
     );
     targetColor.value = withSequence(
       withTiming(1, { duration: 55 }),
-      withTiming(0, { duration: 300 })
+      withTiming(0, { duration: 310 })
     );
 
     durRef.current = Math.max(MIN_DUR, durRef.current - DUR_STEP);
     spawnRing(durRef.current);
   }, [spawnRing, flashOpacity, targetScale, targetColor]);
 
-  const startGame = useCallback(() => {
+  const beginGame = useCallback(() => {
     scoreRef.current = 0;
     durRef.current = INITIAL_DUR;
     phaseRef.current = "playing";
     setScore(0);
     setPhase("playing");
-    overlayOpacity.value = 0;
     spawnRing(INITIAL_DUR);
-  }, [spawnRing, overlayOpacity]);
+  }, [spawnRing]);
 
-  const handleTap = useCallback(() => {
-    const p = phaseRef.current;
-    if (p === "idle" || p === "gameover") {
-      startGame();
-      return;
-    }
-    if (p !== "playing") return;
+  const handleRestart = useCallback(() => {
+    cancelAnimation(ringRadius);
+    beginGame();
+  }, [ringRadius, beginGame]);
+
+  const handleMenu = useCallback(() => {
+    cancelAnimation(ringRadius);
+    ringRadius.value = 0;
+    phaseRef.current = "menu";
+    setPhase("menu");
+  }, [ringRadius]);
+
+  const handleScreenTap = useCallback(() => {
+    if (phaseRef.current !== "playing") return;
 
     const r = ringRadius.value;
     const hit = r >= TARGET_R - TOLERANCE && r <= TARGET_R + TOLERANCE;
     cancelAnimation(ringRadius);
     if (hit) doHit();
     else doGameOver();
-  }, [ringRadius, doHit, doGameOver, startGame]);
+  }, [ringRadius, doHit, doGameOver]);
 
-  const topPad = Platform.OS === "web" ? Math.max(insets.top, 67) : insets.top;
-  const botPad = Platform.OS === "web" ? Math.max(insets.bottom, 34) : insets.bottom;
+  const showRings = phase === "playing" || phase === "gameover";
 
   return (
     <View style={s.root}>
@@ -367,44 +490,58 @@ export default function GameScreen() {
       />
       <GridBackground />
 
-      {/* Full-screen tap */}
-      <Pressable style={StyleSheet.absoluteFill} onPress={handleTap} />
+      {/* Game tap zone — only active while playing */}
+      {phase === "playing" && (
+        <Pressable style={StyleSheet.absoluteFill} onPress={handleScreenTap} />
+      )}
 
-      {/* Score */}
-      <View style={[s.scoreArea, { paddingTop: topPad + 14 }]} pointerEvents="none">
-        <Text style={s.scoreLabel}>SCORE</Text>
-        <Text style={s.scoreValue}>{score}</Text>
-        {phase === "playing" && bestScore > 0 && (
-          <Text style={s.bestInline}>BEST  {bestScore}</Text>
-        )}
-      </View>
-
-      {/* Rings layer */}
-      <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <TargetRing scale={targetScale} colorProgress={targetColor} />
-        <ShrinkingRing radius={ringRadius} />
-      </View>
-
-      {/* Idle screen */}
-      {phase === "idle" && (
+      {/* Score — visible while playing */}
+      {phase === "playing" && (
         <View
-          style={[s.idleBox, { paddingBottom: botPad + 28 }]}
+          style={[s.scoreArea, { paddingTop: topPad + 16 }]}
           pointerEvents="none"
         >
-          <Text style={s.gameTitle}>ANTIGRAVITY</Text>
-          <Text style={s.tapPrompt}>TAP ANYWHERE TO START</Text>
+          <Text style={s.scoreLabel}>SCORE</Text>
+          <Text style={s.scoreValue}>{score}</Text>
+          {bestScore > 0 && (
+            <Text style={s.bestInline}>BEST  {bestScore}</Text>
+          )}
         </View>
       )}
 
-      {/* Flash */}
+      {/* Rings — anchored to random target position */}
+      {showRings && (
+        <RingsAnchor
+          anchorX={anchorX}
+          anchorY={anchorY}
+          ringRadius={ringRadius}
+          targetScale={targetScale}
+          targetColor={targetColor}
+        />
+      )}
+
+      {/* Flash on hit */}
       <FlashOverlay opacity={flashOpacity} />
 
+      {/* Main menu */}
+      {phase === "menu" && (
+        <MainMenu
+          onPlay={beginGame}
+          bestScore={bestScore}
+          topPad={topPad}
+          botPad={botPad}
+        />
+      )}
+
       {/* Game over */}
-      <GameOverOverlay
-        opacity={overlayOpacity}
-        score={finalScore}
-        bestScore={bestScore}
-      />
+      {phase === "gameover" && (
+        <GameOverOverlay
+          score={finalScore}
+          bestScore={bestScore}
+          onRestart={handleRestart}
+          onMenu={handleMenu}
+        />
+      )}
     </View>
   );
 }
@@ -418,16 +555,14 @@ const s = StyleSheet.create({
     backgroundColor: "rgba(0,255,232,0.035)",
   },
 
-  // Anchor at screen center; children use transform to offset themselves
-  centerAnchor: {
+  // Rings anchor — absolutely positioned at target center (width/height 0)
+  ringAnchor: {
     position: "absolute",
-    left: CX,
-    top: CY,
     width: 0,
     height: 0,
   },
 
-  // Score display
+  // Score
   scoreArea: {
     position: "absolute",
     top: 0,
@@ -460,7 +595,7 @@ const s = StyleSheet.create({
     marginTop: 4,
   },
 
-  // Rings
+  // Shrinking ring visuals
   shrinkGlowFaint: {
     backgroundColor: C.pinkFaint,
   },
@@ -483,7 +618,79 @@ const s = StyleSheet.create({
     backgroundColor: C.cyan,
   },
 
-  // Game over
+  // ── Main menu ──
+  menuWrap: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  menuTopInfo: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    alignItems: "center",
+  },
+  menuBestLabel: {
+    fontFamily: "Orbitron_400Regular",
+    fontSize: 10,
+    letterSpacing: 5,
+    color: C.subtleText,
+    marginBottom: 2,
+  },
+  menuBestScore: {
+    fontFamily: "Orbitron_900Black",
+    fontSize: 48,
+    color: C.cyan,
+    lineHeight: 54,
+    textShadowColor: C.cyan,
+    textShadowRadius: 18,
+    textShadowOffset: { width: 0, height: 0 },
+  },
+  menuCenter: {
+    alignItems: "center",
+  },
+  playBtnOuter: {
+    borderWidth: 2,
+    borderColor: C.cyan,
+    borderRadius: 4,
+    shadowColor: C.cyan,
+    shadowRadius: 20,
+    shadowOpacity: 0.7,
+    shadowOffset: { width: 0, height: 0 },
+  },
+  playBtnPressed: {
+    opacity: 0.75,
+    shadowOpacity: 0.4,
+  },
+  playBtnInner: {
+    paddingHorizontal: 52,
+    paddingVertical: 18,
+  },
+  playText: {
+    fontFamily: "Orbitron_900Black",
+    fontSize: 26,
+    letterSpacing: 10,
+    color: C.cyan,
+    textShadowColor: C.cyan,
+    textShadowRadius: 14,
+    textShadowOffset: { width: 0, height: 0 },
+  },
+  menuBottom: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+  },
+  menuHint: {
+    fontFamily: "Orbitron_400Regular",
+    fontSize: 10,
+    letterSpacing: 3,
+    color: "rgba(0,255,232,0.28)",
+    textAlign: "center",
+    paddingHorizontal: 32,
+  },
+
+  // ── Game over ──
   gameOverWrap: {
     alignItems: "center",
     justifyContent: "center",
@@ -502,7 +709,7 @@ const s = StyleSheet.create({
   separator: {
     width: 110,
     height: 1,
-    backgroundColor: "rgba(0,255,232,0.25)",
+    backgroundColor: "rgba(0,255,232,0.22)",
     marginBottom: 20,
   },
   gameOverScoreLabel: {
@@ -527,53 +734,54 @@ const s = StyleSheet.create({
     letterSpacing: 4,
     color: C.subtleText,
     marginTop: 6,
-    marginBottom: 44,
+    marginBottom: 40,
   },
-  restartBtnOuter: {
-    borderWidth: 1,
-    borderColor: C.pink,
-    borderRadius: 3,
-    shadowColor: C.pink,
-    shadowRadius: 14,
-    shadowOpacity: 0.65,
-    shadowOffset: { width: 0, height: 0 },
-  },
-  restartBtnInner: {
-    paddingHorizontal: 30,
-    paddingVertical: 13,
-  },
-  restartText: {
-    fontFamily: "Orbitron_700Bold",
-    fontSize: 13,
-    letterSpacing: 5,
-    color: C.pink,
-    textShadowColor: C.pink,
-    textShadowRadius: 10,
-    textShadowOffset: { width: 0, height: 0 },
-  },
-
-  // Idle
-  idleBox: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
+  gameOverButtons: {
+    gap: 14,
     alignItems: "center",
   },
-  gameTitle: {
-    fontFamily: "Orbitron_900Black",
-    fontSize: 30,
-    letterSpacing: 8,
+  goBtnOuter: {
+    borderRadius: 3,
+    minWidth: 220,
+    alignItems: "center",
+  },
+  goBtnPrimary: {
+    borderWidth: 2,
+    borderColor: C.cyan,
+    shadowColor: C.cyan,
+    shadowRadius: 14,
+    shadowOpacity: 0.6,
+    shadowOffset: { width: 0, height: 0 },
+    paddingHorizontal: 36,
+    paddingVertical: 14,
+  },
+  goBtnSecondary: {
+    borderWidth: 1,
+    borderColor: C.pink,
+    shadowColor: C.pink,
+    shadowRadius: 10,
+    shadowOpacity: 0.5,
+    shadowOffset: { width: 0, height: 0 },
+    paddingHorizontal: 36,
+    paddingVertical: 14,
+  },
+  goBtnPressed: {
+    opacity: 0.7,
+  },
+  goBtnText: {
+    fontFamily: "Orbitron_700Bold",
+    fontSize: 13,
+    letterSpacing: 4,
+    textShadowOffset: { width: 0, height: 0 },
+  },
+  goBtnTextPrimary: {
     color: C.cyan,
     textShadowColor: C.cyan,
-    textShadowRadius: 22,
-    textShadowOffset: { width: 0, height: 0 },
-    marginBottom: 10,
+    textShadowRadius: 10,
   },
-  tapPrompt: {
-    fontFamily: "Orbitron_400Regular",
-    fontSize: 12,
-    letterSpacing: 4,
-    color: C.subtleText,
+  goBtnTextSecondary: {
+    color: C.pink,
+    textShadowColor: C.pink,
+    textShadowRadius: 8,
   },
 });
