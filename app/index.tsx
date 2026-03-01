@@ -20,6 +20,7 @@ import Animated, {
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { soundManager } from "@/lib/sounds";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
@@ -374,6 +375,14 @@ export default function GameScreen() {
   const anchorX = useSharedValue(SCREEN_W / 2);
   const anchorY = useSharedValue(SCREEN_H / 2);
 
+  // Load sounds immediately for zero-latency playback
+  useEffect(() => {
+    soundManager.init();
+    return () => {
+      soundManager.release();
+    };
+  }, []);
+
   useEffect(() => {
     AsyncStorage.getItem("antigravity_best").then((v) => {
       if (v) setBestScore(parseInt(v, 10));
@@ -400,6 +409,7 @@ export default function GameScreen() {
     setFinalScore(s);
     setPhase("gameover");
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    soundManager.play("gameover");
     saveBest(s);
   }, [saveBest]);
 
@@ -427,6 +437,7 @@ export default function GameScreen() {
     setScore(scoreRef.current);
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    soundManager.play("success");
 
     flashOpacity.value = withSequence(
       withTiming(0.36, { duration: 50 }),
