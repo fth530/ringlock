@@ -1,26 +1,41 @@
-// Import directly from the sub-module to avoid the broken root index.js
-// expo-av's root index re-exports AV.types which has a Metro resolution bug
-// in this SDK version. The individual Audio module works perfectly.
-import { Sound, setAudioModeAsync } from "expo-av/build/Audio";
+// Dynamic lazy import — ensures that any native module load failure
+// is caught at runtime and never crashes the app. Audio is enhancement-only.
+// We require from the sub-module path to avoid expo-audio's broken root index.
 
-// ─── Audio files ──────────────────────────────────────────────────────────────
-// Generated synth sounds are in assets/sounds/.
-// Replace them with your own WAV/MP3 files anytime — drop them in the same
-// folder with the same names and the code requires no changes.
-const SOURCES = {
+type SoundLike = {
+  replayAsync(): Promise<unknown>;
+  unloadAsync(): Promise<unknown>;
+};
+
+type SoundConstructor = {
+  createAsync(
+    source: unknown,
+    initialStatus?: { shouldPlay?: boolean; volume?: number }
+  ): Promise<{ sound: SoundLike }>;
+};
+
+const SOURCES: Record<string, unknown> = {
   success: require("../assets/sounds/success.wav"),
   gameover: require("../assets/sounds/gameover.wav"),
-} as const;
+};
 
 type SoundKey = keyof typeof SOURCES;
 
 class SoundManager {
-  private sounds: Partial<Record<SoundKey, Sound>> = {};
+  private sounds: Partial<Record<SoundKey, SoundLike>> = {};
   private ready = false;
 
   async init() {
     if (this.ready) return;
     try {
+      // Dynamic require keeps the import inside a try-catch so any
+      // native module unavailability is caught rather than crashing.
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { Sound, setAudioModeAsync } = require("expo-av/build/Audio") as {
+        Sound: SoundConstructor;
+        setAudioModeAsync: (mode: Record<string, unknown>) => Promise<void>;
+      };
+
       await setAudioModeAsync({
         playsInSilentModeIOS: true,
         staysActiveInBackground: false,
@@ -37,7 +52,7 @@ class SoundManager {
 
       this.ready = true;
     } catch (e) {
-      // Fail silently — audio is enhancement-only, never blocks gameplay
+      // Never block gameplay — audio is enhancement-only
       console.warn("[SoundManager] init failed:", e);
     }
   }
@@ -46,10 +61,10 @@ class SoundManager {
     const sound = this.sounds[key];
     if (!sound) return;
     try {
-      // replayAsync resets position to 0 and plays — ideal for SFX
+      // replayAsync resets position to 0 and plays — ideal for low-latency SFX
       await sound.replayAsync();
     } catch (_) {
-      // Never let audio errors interrupt the game loop
+      // Swallow — never interrupt gameplay for audio errors
     }
   }
 
@@ -64,5 +79,4 @@ class SoundManager {
   }
 }
 
-// Singleton shared across the app lifetime
 export const soundManager = new SoundManager();
