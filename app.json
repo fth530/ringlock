@@ -1,43 +1,35 @@
 {
   "expo": {
-    "name": "Antigravity",
-    "slug": "antigravity",
+    "name": "RingLock",
+    "slug": "ringlock",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "antigravity",
+    "icon": "./assets/icon.png",
+    "scheme": "ringlock",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/splash-icon.png",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#030310"
+      "backgroundColor": "#000000"
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.antigravity"
+      "bundleIdentifier": "com.ringlock"
     },
     "android": {
-      "package": "com.antigravity",
+      "package": "com.ringlock",
       "adaptiveIcon": {
-        "backgroundColor": "#030310",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#000000",
+        "foregroundImage": "./assets/icon.png"
       }
     },
     "web": {
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/icon.png"
     },
     "plugins": [
-      [
-        "expo-router",
-        {
-          "origin": "https://replit.com/"
-        }
-      ],
-      "expo-font",
-      "expo-web-browser"
+      "expo-router",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -1,16 +1,16 @@
-import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { queryClient } from "@/lib/query-client";
 import { useFonts } from "expo-font";
 import {
   Orbitron_400Regular,
   Orbitron_700Bold,
   Orbitron_900Black,
 } from "@expo-google-fonts/orbitron";
+import { soundManager } from "@/lib/sounds";
+import { SettingsProvider } from "@/lib/SettingsContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -23,6 +23,8 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
+  const [appIsReady, setAppIsReady] = useState(false);
+
   const [fontsLoaded] = useFonts({
     Orbitron_400Regular,
     Orbitron_700Bold,
@@ -30,20 +32,41 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (fontsLoaded) {
+    async function prepare() {
+      try {
+        // Normalde burada Drizzle / Postgres init yapılacaktı, ama 
+        // son kararla Offline moda geçtiğimiz için sesleri ve yerel 
+        // AsyncStorage okumalarını önceden yüklüyoruz.
+        await soundManager.init();
+      } catch (e) {
+        console.warn(e);
+      } finally {
+        setAppIsReady(true);
+      }
+    }
+
+    prepare();
+
+    return () => {
+      soundManager.release();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (fontsLoaded && appIsReady) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded]);
+  }, [fontsLoaded, appIsReady]);
 
-  if (!fontsLoaded) return null;
+  if (!fontsLoaded || !appIsReady) return null;
 
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
+      <SettingsProvider>
         <GestureHandlerRootView style={{ flex: 1 }}>
           <RootLayoutNav />
         </GestureHandlerRootView>
-      </QueryClientProvider>
+      </SettingsProvider>
     </ErrorBoundary>
   );
 }

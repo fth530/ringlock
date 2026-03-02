@@ -1,0 +1,247 @@
+import { useState, useRef, useCallback, useEffect } from "react";
+import { Platform } from "react-native";
+import {
+    useSharedValue,
+    withTiming,
+    withSequence,
+    cancelAnimation,
+    runOnJS,
+    Easing,
+} from "react-native-reanimated";
+import * as Haptics from "expo-haptics";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { soundManager } from "@/lib/sounds";
+import { useSettings } from "@/lib/SettingsContext";
+import {
+    Phase, HitQuality, INITIAL_DUR, MIN_DUR, DUR_STEP,
+    SCREEN_W, SCREEN_H, TARGET_R, MAX_R, TOLERANCE, EDGE_PAD,
+    PERFECT_THRESHOLD, GOOD_THRESHOLD,
+    MAX_LIVES, COMBO_FOR_EXTRA_LIFE,
+} from "@/constants/game";
+
+function randomTargetPos(topInset: number, botInset: number) {
+    const topY = (Platform.OS === "web" ? Math.max(topInset, 67) : topInset) + 170;
+    const botY = SCREEN_H - (Platform.OS === "web" ? Math.max(botInset, 34) : botInset) - EDGE_PAD;
+    const minX = EDGE_PAD;
+    const maxX = SCREEN_W - EDGE_PAD;
+    return {
+        x: minX + Math.random() * (maxX - minX),
+        y: topY + Math.random() * (botY - topY),
+    };
+}
+
+export function useGameLoop(topPad: number, botPad: number) {
+    const { soundEnabled, vibrationEnabled } = useSettings();
+
+    const [score, setScore] = useState(0);
+    const [bestScore, setBestScore] = useState(0);
+    const [phase, setPhase] = useState<Phase>("menu");
+    const [finalScore, setFinalScore] = useState(0);
+    const [combo, setCombo] = useState(0);
+    const [maxCombo, setMaxCombo] = useState(0);
+    const [hitQuality, setHitQuality] = useState<HitQuality>(null);
+    const [lives, setLives] = useState(MAX_LIVES);
+    const [visualPhase, setVisualPhase] = useState(1);
+
+    const phaseRef = useRef<Phase>("menu");
+    const scoreRef = useRef(0);
+    const durRef = useRef(INITIAL_DUR);
+    const comboRef = useRef(0);
+    const livesRef = useRef(MAX_LIVES);
+    const maxComboRef = useRef(0);
+
+    // Settings refs — stale closure prevention
+    const soundRef = useRef(soundEnabled);
+    const vibrationRef = useRef(vibrationEnabled);
+    useEffect(() => { soundRef.current = soundEnabled; }, [soundEnabled]);
+    useEffect(() => { vibrationRef.current = vibrationEnabled; }, [vibrationEnabled]);
+
+    const ringRadius = useSharedValue(0);
+    const flashOpacity = useSharedValue(0);
+    const targetScale = useSharedValue(1);
+    const targetColor = useSharedValue(0);
+    const anchorX = useSharedValue(SCREEN_W / 2);
+    const anchorY = useSharedValue(SCREEN_H / 2);
+
+    useEffect(() => {
+        AsyncStorage.getItem("ringlock_best").then((v: string | null) => {
+            if (v) setBestScore(parseInt(v, 10));
+        });
+    }, []);
+
+    const saveBest = useCallback((s: number) => {
+        AsyncStorage.getItem("ringlock_best").then((v: string | null) => {
+            const prev = v ? parseInt(v, 10) : 0;
+            if (s > prev) {
+                AsyncStorage.setItem("ringlock_best", String(s));
+                setBestScore(s);
+            }
+        });
+    }, []);
+
+    const updateVisualPhase = useCallback((s: number) => {
+        if (s >= 50) setVisualPhase(4);
+        else if (s >= 25) setVisualPhase(3);
+        else if (s >= 10) setVisualPhase(2);
+        else setVisualPhase(1);
+    }, []);
+
+    const playSound = useCallback((key: "success" | "gameover") => {
+        if (soundRef.current) soundManager.play(key);
+    }, []);
+
+    const haptic = useCallback((type: "heavy" | "medium" | "light" | "error" | "warning") => {
+        if (!vibrationRef.current) return;
+        if (type === "error") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        else if (type === "warning") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+        else if (type === "heavy") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+        else if (type === "medium") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        else Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }, []);
+
+    const doGameOver = useCallback(() => {
+        if (phaseRef.current !== "playing") return;
+        phaseRef.current = "gameover";
+        const s = scoreRef.current;
+        setFinalScore(s);
+        setPhase("gameover");
+        haptic("error");
+        playSound("gameover");
+        saveBest(s);
+    }, [saveBest, haptic, playSound]);
+
+    const spawnRing = useCallback((dur: number) => {
+        const pos = randomTargetPos(topPad, botPad);
+        anchorX.value = pos.x;
+        anchorY.value = pos.y;
+        ringRadius.value = MAX_R;
+        ringRadius.value = withTiming(
+            0,
+            { duration: dur, easing: Easing.linear },
+            (done) => {
+                if (done) runOnJS(handleMiss)();
+            }
+        );
+    }, [ringRadius, anchorX, anchorY, topPad, botPad]);
+
+    // Unified miss handler — tek fonksiyon, DRY ihlali giderildi
+    const handleMiss = useCallback(() => {
+        if (phaseRef.current !== "playing") return;
+        comboRef.current = 0;
+        setCombo(0);
+        setHitQuality(null);
+        livesRef.current -= 1;
+        setLives(livesRef.current);
+        haptic("warning");
+
+        if (livesRef.current <= 0) {
+            doGameOver();
+        } else {
+            flashOpacity.value = withSequence(
+                withTiming(0.2, { duration: 50 }),
+                withTiming(0, { duration: 250 })
+            );
+            durRef.current = Math.max(MIN_DUR, durRef.current + 20);
+            spawnRing(durRef.current);
+        }
+    }, [doGameOver, flashOpacity, haptic, spawnRing]);
+
+    const doHit = useCallback((quality: HitQuality) => {
+        scoreRef.current += 1;
+        setScore(scoreRef.current);
+        comboRef.current += 1;
+        setCombo(comboRef.current);
+
+        // maxCombo ref ile stale closure sorunu yok
+        if (comboRef.current > maxComboRef.current) {
+            maxComboRef.current = comboRef.current;
+            setMaxCombo(comboRef.current);
+        }
+
+        // Extra life on big combo
+        if (comboRef.current > 0 && comboRef.current % COMBO_FOR_EXTRA_LIFE === 0) {
+            if (livesRef.current < MAX_LIVES) {
+                livesRef.current += 1;
+                setLives(livesRef.current);
+            }
+        }
+
+        setHitQuality(quality);
+        updateVisualPhase(scoreRef.current);
+
+        if (quality === "perfect") haptic("heavy");
+        else if (quality === "good") haptic("medium");
+        else haptic("light");
+        playSound("success");
+
+        const flashIntensity = quality === "perfect" ? 0.5 : quality === "good" ? 0.3 : 0.15;
+        flashOpacity.value = withSequence(
+            withTiming(flashIntensity, { duration: 50 }),
+            withTiming(0, { duration: 200 })
+        );
+        targetScale.value = withSequence(
+            withTiming(quality === "perfect" ? 1.6 : 1.3, { duration: 65 }),
+            withTiming(1, { duration: 210, easing: Easing.out(Easing.quad) })
+        );
+        targetColor.value = withSequence(
+            withTiming(1, { duration: 55 }),
+            withTiming(0, { duration: 310 })
+        );
+
+        durRef.current = Math.max(MIN_DUR, durRef.current - DUR_STEP);
+        spawnRing(durRef.current);
+    }, [spawnRing, flashOpacity, targetScale, targetColor, updateVisualPhase, haptic, playSound]);
+
+    const beginGame = useCallback(() => {
+        scoreRef.current = 0;
+        durRef.current = INITIAL_DUR;
+        phaseRef.current = "playing";
+        comboRef.current = 0;
+        livesRef.current = MAX_LIVES;
+        maxComboRef.current = 0;
+        setScore(0);
+        setCombo(0);
+        setMaxCombo(0);
+        setLives(MAX_LIVES);
+        setHitQuality(null);
+        setVisualPhase(1);
+        setPhase("playing");
+        spawnRing(INITIAL_DUR);
+    }, [spawnRing]);
+
+    const handleRestart = useCallback(() => {
+        cancelAnimation(ringRadius);
+        beginGame();
+    }, [ringRadius, beginGame]);
+
+    const handleMenu = useCallback(() => {
+        cancelAnimation(ringRadius);
+        ringRadius.value = 0;
+        phaseRef.current = "menu";
+        setPhase("menu");
+    }, [ringRadius]);
+
+    const handleScreenTap = useCallback(() => {
+        if (phaseRef.current !== "playing") return;
+        const r = ringRadius.value;
+        const diff = Math.abs(r - TARGET_R);
+        cancelAnimation(ringRadius);
+
+        if (diff <= TOLERANCE) {
+            let quality: HitQuality;
+            if (diff <= PERFECT_THRESHOLD) quality = "perfect";
+            else if (diff <= GOOD_THRESHOLD) quality = "good";
+            else quality = "late";
+            doHit(quality);
+        } else {
+            handleMiss();
+        }
+    }, [ringRadius, doHit, handleMiss]);
+
+    return {
+        score, bestScore, phase, finalScore,
+        combo, maxCombo, hitQuality, lives, visualPhase,
+        ringRadius, flashOpacity, targetScale, targetColor, anchorX, anchorY,
+        beginGame, handleRestart, handleMenu, handleScreenTap,
+    };
+}
