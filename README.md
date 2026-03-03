@@ -1,161 +1,162 @@
 # 🎯 RingLock
 
-**A precision-based arcade game built with React Native & Expo.**
+**Hassasiyet odaklı bir arcade mobil oyun. React Native & Expo ile geliştirildi.**
 
-Tap the screen at the exact moment the shrinking ring locks onto the target. Simple to learn, impossible to master.
+Küçülen halka hedefe kilitlendiği anda ekrana dokun. Öğrenmesi kolay, ustalaşması imkansız.
 
 ---
 
-## 🎮 Gameplay
+## 🎮 Nasıl Oynanır?
 
-- A **neon pink ring** shrinks from the edges of the screen toward a fixed **cyan target ring**
-- Tap the screen when the rings **overlap perfectly**
-- Each successful hit spawns a new ring at a random position — faster than before
-- Miss 3 times and it's **Game Over**
+- Ekranda rastgele bir noktada **cyan renkli hedef halka** belirir
+- **Pembe bir halka** ekranın kenarlarından hızla küçülerek hedefe doğru yaklaşır
+- Halkalar **tam üst üste geldiği anda** ekrana dokun
+- Her başarılı vuruşta yeni bir halka — her seferinde daha hızlı
+- 3 canını kaybedersen **oyun biter**
 
-### Hit Quality System
-| Quality | Precision | Feedback |
-|---------|-----------|----------|
-| ⭐ **PERFECT** | ±5px | Strong haptic + bright flash |
-| ✅ **GOOD** | ±10px | Medium haptic |
-| ⚠️ **LATE** | ±18px | Light haptic |
-| ❌ **MISS** | Beyond | Lose a life |
+### Vuruş Kalitesi
+| Kalite | Hassasiyet | Geri Bildirim |
+|--------|-----------|---------------|
+| ⭐ **PERFECT** | ±5px | Güçlü titreşim + parlak flaş |
+| ✅ **GOOD** | ±10px | Orta titreşim |
+| ⚠️ **LATE** | ±18px | Hafif titreşim |
+| ❌ **MISS** | Dışında | 1 can kaybedersin |
 
-### Combo System 🔥
-- Build combos with consecutive hits
+### Kombo Sistemi 🔥
+- Ardışık vuruşlarla kombo sayacı yükselir
 - **3x** → GOOD | **5x** → GREAT | **10x** → INSANE
-- Every **15 combo** earns an extra life (max 3)
+- Her **15 kombo**'da ekstra bir can kazanırsın (maks 3)
 
-### Visual Phases 🌈
-The background evolves as you progress:
-- Score 10+ → Deep blue atmosphere
-- Score 25+ → Purple neon shift  
-- Score 50+ → Full cyberpunk mode
-
----
-
-## 🛠️ Tech Stack
-
-| Technology | Purpose |
-|-----------|---------|
-| **React Native** | Cross-platform mobile framework |
-| **Expo** (SDK 54) | Development & build toolchain |
-| **Expo Router** | File-based navigation |
-| **React Native Reanimated** | 60fps UI thread animations |
-| **expo-av** | Native audio playback |
-| **expo-haptics** | Haptic feedback |
-| **AsyncStorage** | Offline score persistence |
+### Görsel Evreler 🌈
+Skor arttıkça arka plan dönüşür:
+- **10+ puan** → Derin mavi atmosfer
+- **25+ puan** → Mor neon geçişi
+- **50+ puan** → Tam cyberpunk modu
 
 ---
 
-## 📁 Project Structure
+## ⚙️ Ayarlar
+
+Ana menüdeki **⚙ dişli çark** ikonuna dokunarak:
+- **Ses** → Ses efektlerini aç/kapat
+- **Titreşim** → Haptic geri bildirimi aç/kapat
+
+Ayarlar cihazda kalıcı olarak saklanır.
+
+---
+
+## 🛠️ Teknoloji Altyapısı
+
+| Teknoloji | Kullanım Amacı |
+|-----------|---------------|
+| **React Native** | Çapraz platform mobil framework |
+| **Expo** (SDK 54) | Geliştirme ve build araçları |
+| **Expo Router** | Dosya tabanlı navigasyon |
+| **React Native Reanimated** | 60fps UI thread animasyonlar |
+| **expo-av** | Yerel ses oynatma |
+| **expo-haptics** | Dokunsal geri bildirim (titreşim) |
+| **AsyncStorage** | Çevrimdışı skor kaydetme |
+
+---
+
+## 📁 Proje Yapısı
 
 ```
 ringlock/
 ├── app/
-│   ├── _layout.tsx          # Root layout, splash screen, providers
-│   ├── index.tsx             # Main game screen + HUD components
-│   ├── +not-found.tsx        # 404 page (themed)
-│   └── +native-intent.tsx    # Deep link handler
+│   ├── _layout.tsx          # Ana düzen, splash screen, provider'lar
+│   ├── index.tsx             # Oyun ekranı + HUD bileşenleri
+│   ├── +not-found.tsx        # 404 sayfası (temalı)
+│   └── +native-intent.tsx    # Deep link yönlendirici
 ├── components/
-│   ├── TargetRings.tsx       # Target + shrinking ring (scale-based)
-│   ├── MainMenu.tsx          # Title screen
-│   ├── GameOverOverlay.tsx   # Game over screen with stats
-│   ├── SettingsOverlay.tsx   # Sound & vibration toggles
-│   ├── GridBackground.tsx    # Cyberpunk grid effect
-│   ├── ErrorBoundary.tsx     # Error boundary wrapper
-│   └── ErrorFallback.tsx     # Error fallback UI
+│   ├── TargetRings.tsx       # Hedef + küçülen halka (scale tabanlı)
+│   ├── MainMenu.tsx          # Ana menü ekranı
+│   ├── GameOverOverlay.tsx   # Oyun sonu istatistik ekranı
+│   ├── SettingsOverlay.tsx   # Ses & titreşim ayarları
+│   ├── GridBackground.tsx    # Cyberpunk ızgara efekti
+│   ├── ErrorBoundary.tsx     # Hata yakalama katmanı
+│   └── ErrorFallback.tsx     # Hata geri dönüş arayüzü
 ├── hooks/
-│   ├── useGameLoop.ts        # Core game logic & state machine
-│   └── useGameLoop.test.ts   # Unit tests
+│   ├── useGameLoop.ts        # Oyun mantığı & durum makinesi
+│   └── useGameLoop.test.ts   # Birim testleri
 ├── lib/
-│   ├── sounds.ts             # Audio manager (expo-av)
-│   └── SettingsContext.tsx    # Settings provider (sound/vibration)
+│   ├── sounds.ts             # Ses yöneticisi (expo-av)
+│   └── SettingsContext.tsx    # Ayar sağlayıcısı (ses/titreşim)
 ├── constants/
-│   └── game.ts               # Game constants, colors, types
+│   └── game.ts               # Oyun sabitleri, renkler, tipler
 └── assets/
-    ├── icon.png              # App icon
-    ├── splash.png            # Splash screen
+    ├── icon.png              # Uygulama ikonu
+    ├── splash.png            # Açılış ekranı
     └── sounds/
-        ├── success.wav       # Hit sound
-        └── gameover.wav      # Game over sound
+        ├── success.wav       # Başarılı vuruş sesi
+        └── gameover.wav      # Oyun sonu sesi
 ```
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Kurulum & Çalıştırma
 
-### Prerequisites
+### Gereksinimler
 - Node.js 18+
-- Expo Go app on your phone ([iOS](https://apps.apple.com/app/expo-go/id982107779) / [Android](https://play.google.com/store/apps/details?id=host.exp.exponent))
+- Telefonunda Expo Go uygulaması ([iOS](https://apps.apple.com/app/expo-go/id982107779) / [Android](https://play.google.com/store/apps/details?id=host.exp.exponent))
 
-### Install & Run
+### Adımlar
 
 ```bash
-# Clone the repository
+# Repoyu klonla
 git clone https://github.com/fth530/ringlock.git
 cd ringlock
 
-# Install dependencies
+# Bağımlılıkları yükle
 npm install
 
-# Start the development server
+# Geliştirme sunucusunu başlat
 npx expo start
 ```
 
-Scan the QR code with Expo Go to play on your device.
+Terminaldeki QR kodu Expo Go ile tarayarak telefonunda oyna.
 
-### Build for Production
+### Production Build
 
 ```bash
-# Install EAS CLI
+# EAS CLI kur
 npm install -g eas-cli
 
-# Build for Android
+# Android APK oluştur
 eas build --platform android
 
-# Build for iOS
+# iOS IPA oluştur
 eas build --platform ios
 ```
 
 ---
 
-## ⚙️ Settings
-
-Access settings from the **⚙ gear icon** on the main menu:
-- **Sound** — Toggle sound effects on/off
-- **Vibration** — Toggle haptic feedback on/off
-
-Settings are persisted locally via AsyncStorage.
-
----
-
-## 🧪 Testing
+## 🧪 Testler
 
 ```bash
 npm test
 ```
 
-Tests cover: initialization, game state transitions, lives system, combo reset, and menu navigation.
+Testler: başlatma, oyun durumu geçişleri, can sistemi, kombo sıfırlama ve menü navigasyonunu kapsar.
 
 ---
 
-## 📱 Platform Support
+## 📱 Platform Desteği
 
-| Platform | Status |
-|----------|--------|
-| Android | ✅ Fully supported |
-| iOS | ✅ Fully supported |
-| Web | ⚠️ Basic support (no haptics) |
+| Platform | Durum |
+|----------|-------|
+| Android | ✅ Tam destek |
+| iOS | ✅ Tam destek |
+| Web | ⚠️ Temel destek (titreşim yok) |
 
 ---
 
-## 📄 License
+## 📄 Lisans
 
 MIT
 
 ---
 
 <p align="center">
-  Built with ❤️ and React Native
+  ❤️ ile React Native kullanılarak geliştirildi
 </p>
