@@ -1,4 +1,3 @@
-import { Platform } from "react-native";
 import { Audio } from "expo-av";
 
 type SoundKey = "success" | "gameover";

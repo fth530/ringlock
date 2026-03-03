@@ -20,6 +20,7 @@ const SettingsContext = createContext<SettingsState>({
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
     const [soundEnabled, setSoundEnabled] = useState(true);
     const [vibrationEnabled, setVibrationEnabled] = useState(true);
+    const [loaded, setLoaded] = useState(false);
 
     // Load saved settings
     useEffect(() => {
@@ -33,28 +34,19 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
                     // silently ignore
                 }
             }
+            setLoaded(true);
         });
     }, []);
 
-    const persist = useCallback((sound: boolean, vibration: boolean) => {
-        AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ soundEnabled: sound, vibrationEnabled: vibration }));
-    }, []);
+    // Persist whenever settings change (skip initial load to avoid overwriting)
+    useEffect(() => {
+        if (loaded) {
+            AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ soundEnabled, vibrationEnabled }));
+        }
+    }, [soundEnabled, vibrationEnabled, loaded]);
 
-    const toggleSound = useCallback(() => {
-        setSoundEnabled((prev) => {
-            const next = !prev;
-            persist(next, vibrationEnabled);
-            return next;
-        });
-    }, [vibrationEnabled, persist]);
-
-    const toggleVibration = useCallback(() => {
-        setVibrationEnabled((prev) => {
-            const next = !prev;
-            persist(soundEnabled, next);
-            return next;
-        });
-    }, [soundEnabled, persist]);
+    const toggleSound = useCallback(() => setSoundEnabled(prev => !prev), []);
+    const toggleVibration = useCallback(() => setVibrationEnabled(prev => !prev), []);
 
     return (
         <SettingsContext.Provider value={{ soundEnabled, vibrationEnabled, toggleSound, toggleVibration }}>

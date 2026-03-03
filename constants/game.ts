@@ -1,10 +1,5 @@
-import { Dimensions } from "react-native";
-
-export const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
-
 export const TARGET_R = 62;
 export const TOLERANCE = 18;
-export const MAX_R = Math.max(SCREEN_W, SCREEN_H) * 0.58;
 export const INITIAL_DUR = 2200;
 export const MIN_DUR = 460;
 export const DUR_STEP = 48;
@@ -13,11 +8,9 @@ export const EDGE_PAD = TARGET_R + 28;
 
 export const GLOW_MID_R = TARGET_R + 14;
 export const GLOW_OUT_R = TARGET_R + 36;
-export const SHRINK_GLOW_EXTRA = 15;
-export const SHRINK_GLOW_FAINT_EXTRA = 36;
 
 // ─── Hit Quality Thresholds ──────────────────────────────────────────────────
-export const PERFECT_THRESHOLD = 5;   // ±5px = PERFECT (neredeyse birebir üst üste)
+export const PERFECT_THRESHOLD = 5;   // ±5px = PERFECT
 export const GOOD_THRESHOLD = 10;     // ±10px = GOOD
 
 // ─── Lives ──────────────────────────────────────────────────────────────────
