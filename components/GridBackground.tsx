@@ -1,12 +1,13 @@
 import React, { useMemo } from "react";
 import { View, StyleSheet, useWindowDimensions } from "react-native";
+import { LAYOUT } from "@/constants/game";
 
 export const GridBackground = React.memo(function GridBackground() {
     const { width, height } = useWindowDimensions();
 
     const lines = useMemo(() => {
         const result: React.ReactNode[] = [];
-        const step = 52;
+        const step = LAYOUT.GRID_STEP;
         for (let x = 0; x <= width; x += step)
             result.push(
                 <View key={`v${x}`} style={[s.gridLine, { left: x, width: 1, height }]} />

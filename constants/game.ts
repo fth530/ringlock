@@ -41,3 +41,9 @@ export const C = {
 
 export type Phase = "menu" | "playing" | "gameover";
 export type HitQuality = "perfect" | "good" | "late" | null;
+
+// ─── Layout Constants (Magic Numbers Removal) ─────────────────────────────────
+export const LAYOUT = {
+  GRID_STEP: 52,
+  TOP_Y_OFFSET: 170,
+};

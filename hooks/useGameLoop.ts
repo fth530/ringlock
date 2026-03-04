@@ -18,6 +18,7 @@ import {
     PERFECT_THRESHOLD, GOOD_THRESHOLD,
     MAX_LIVES, COMBO_FOR_EXTRA_LIFE,
     PHASE_2_SCORE, PHASE_3_SCORE, PHASE_4_SCORE,
+    LAYOUT
 } from "@/constants/game";
 
 // ─── Reducer ────────────────────────────────────────────────────────────────
@@ -139,7 +140,7 @@ function randomTargetPos(
     screenW: number,
     screenH: number,
 ) {
-    const topY = topInset + 170;
+    const topY = topInset + LAYOUT.TOP_Y_OFFSET;
     const botY = screenH - botInset - EDGE_PAD;
     const minX = EDGE_PAD;
     const maxX = screenW - EDGE_PAD;
