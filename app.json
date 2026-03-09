@@ -15,10 +15,15 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.ringlock"
+      "bundleIdentifier": "com.ringlock",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.ringlock",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#000000",
         "foregroundImage": "./assets/icon.png"

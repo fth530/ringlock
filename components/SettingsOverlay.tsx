@@ -16,7 +16,7 @@ export function SettingsOverlay({ onClose }: { onClose: () => void }) {
 
     return (
         <Animated.View style={[StyleSheet.absoluteFill, s.wrap, style]}>
-            <Text style={s.title}>SETTINGS</Text>
+            <Text style={s.title}>AYARLAR</Text>
             <View style={s.separator} />
 
             {/* Sound Toggle */}
@@ -26,7 +26,7 @@ export function SettingsOverlay({ onClose }: { onClose: () => void }) {
                 style={s.row}
                 onPress={toggleSound}
             >
-                <Text style={s.label}>SOUND</Text>
+                <Text style={s.label}>SES</Text>
                 <View style={[s.toggleTrack, soundEnabled && s.toggleTrackOn]}>
                     <View style={[s.toggleThumb, soundEnabled && s.toggleThumbOn]} />
                 </View>
@@ -39,7 +39,7 @@ export function SettingsOverlay({ onClose }: { onClose: () => void }) {
                 style={s.row}
                 onPress={toggleVibration}
             >
-                <Text style={s.label}>VIBRATION</Text>
+                <Text style={s.label}>TITRESIM</Text>
                 <View style={[s.toggleTrack, vibrationEnabled && s.toggleTrackOn]}>
                     <View style={[s.toggleThumb, vibrationEnabled && s.toggleThumbOn]} />
                 </View>
@@ -54,7 +54,7 @@ export function SettingsOverlay({ onClose }: { onClose: () => void }) {
                 onPress={onClose}
                 style={({ pressed }) => [s.closeBtn, pressed && { opacity: 0.6 }]}
             >
-                <Text style={s.closeBtnText}>CLOSE</Text>
+                <Text style={s.closeBtnText}>KAPAT</Text>
             </Pressable>
         </Animated.View>
     );

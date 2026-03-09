@@ -9,16 +9,16 @@ export default function NotFoundScreen() {
       <Stack.Screen options={{ title: "Not Found", headerShown: false }} />
       <View style={s.container}>
         <Text style={s.title}>404</Text>
-        <Text style={s.subtitle}>LOST IN SPACE</Text>
+        <Text style={s.subtitle}>KAYBOLMUS</Text>
         <View style={s.separator} />
-        <Text style={s.message}>This page doesn't exist.</Text>
+        <Text style={s.message}>Bu sayfa mevcut degil.</Text>
         <Link href="/" asChild>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Go to Home"
             style={({ pressed }) => [s.btn, pressed && { opacity: 0.7 }]}
           >
-            <Text style={s.btnText}>GO HOME</Text>
+            <Text style={s.btnText}>ANA SAYFA</Text>
           </Pressable>
         </Link>
       </View>

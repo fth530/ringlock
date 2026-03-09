@@ -1,0 +1,531 @@
+==============================================================
+  RINGLOCK - Hassasiyet Odakli Arcade Oyunu
+  App Store Yayin Oncesi Yapilacaklar Listesi
+  Tarih: 8 Mart 2026
+==============================================================
+
+
+[1] KRITIK - YAPILMAZSA RED GELIR
+--------------------------------------------------------------
+
+1.1 Bundle Identifier Dogrula *** EN SON YAPILACAK ***
+    Dosya: app.json
+    Mevcut: "bundleIdentifier": "com.ringlock"
+    Yapilacak: Apple Developer Portal'da Certificates, Identifiers
+    & Profiles → Identifiers → "+" ile bu Bundle ID'yi olustur.
+    Android package da ayni: "com.ringlock"
+    Eger bu ID alinmissa "com.corut.ringlock" gibi alternatif kullan.
+    NOT: Bu adim en sona birakilabilir, once diger tum isler
+    tamamlanmali. Bundle ID degistirmek kolay ama geri almak zor.
+
+1.2 Gizlilik Politikasi (Privacy Policy)
+    Apple mutlaka bir Privacy Policy URL'i istiyor.
+    Uygulama lokal veri tutuyor (AsyncStorage ile skor, ayarlar,
+    basarimlar, istatistikler).
+    Basit bir gizlilik politikasi sayfasi olusturup URL'ini
+    App Store Connect'e eklemelisin.
+    Notion, GitHub Pages veya kendi siten uzerinden yayinlayabilirsin.
+    Ornek icerik:
+    - Uygulama hicbir kisisel veri toplamaz
+    - Tum veriler cihazda yerel olarak saklanir
+    - Ucuncu taraf hizmetlere veri gonderilmez
+
+1.3 Yas Derecelendirmesi (Age Rating)
+    Ocak 2026'da yeni yas sistemi geldi: 4+, 9+, 13+, 16+, 18+
+    App Store Connect'te guncel yas derecelendirme sorularini cevaplamalisin.
+    Bu oyun kesinlikle 4+ kategorisinde (siddet/kumar/reklam yok).
+
+1.4 iOS Build Number Ekle
+    Dosya: app.json → ios
+    App Store her yuklemede artan bir buildNumber ister.
+    Eklenecek: "buildNumber": "1"
+    Her yeni build'de bu numara artirilmali.
+    [YAPILDI] app.json'a eklendi.
+
+1.5 Android Version Code Ekle
+    Dosya: app.json → android
+    Eklenecek: "versionCode": 1
+    Her yeni build'de artirilmali.
+    [YAPILDI] app.json'a eklendi.
+
+1.6 Export Compliance Beyani (Kod Tarafinda)
+    Dosya: app.json → ios → infoPlist
+    Eklenecek: "ITSAppUsesNonExemptEncryption": false
+    Bu olmadan her TestFlight/App Store yuklemesinde Apple
+    sifreleme sorusu sorar. Uygulama ag baglantisi kullanmiyor,
+    bu yuzden false olmali.
+    [YAPILDI] app.json'a eklendi.
+
+1.7 App Store Kategorisi
+    App Store Connect'te kategori secimi zorunlu.
+    Birincil kategori: Games → Arcade
+    Ikincil kategori (opsiyonel): Games → Casual
+    Kategori secilmeden uygulama gonderilemiyor.
+
+1.8 expo-av Mikrofon Izni Riski
+    expo-av paketi ses calmak icin kullaniliyor ama native tarafta
+    mikrofon izni (NSMicrophoneUsageDescription) de ekleyebilir.
+    Apple gereksiz izin isteyen uygulamalari reddediyor.
+    Cozum: app.json → plugins → expo-av config ile mikrofon iznini
+    devre disi birak:
+    ["expo-av", { "microphonePermission": false }]
+    VEYA EAS build'de ios.infoPlist ile kontrol et.
+
+1.9 Minimum iOS Versiyonu
+    Expo SDK 54 minimum iOS 16.0 destekliyor.
+    App Store Connect'te Deployment Target dogru ayarlanmali.
+    Bu bilgi EAS Build tarafindan otomatik ayarlanir ama
+    test cihazlarinin iOS 16+ olmasi gerektigini unutma.
+
+
+[2] ONEMLI - YAPILMAZSA RED RISKI VAR
+--------------------------------------------------------------
+
+2.1 Kullanilmayan Bagimliliklari Kontrol Et
+    package.json'daki tum bagimliliklarin gercekten kullanildigini dogrula.
+    Apple gereksiz izin isteyen uygulamalari reddediyor.
+    Expo paketlerinden bazilari native permission ekleyebilir.
+    Komut: npx expo install --fix
+
+2.2 EAS Build Yapilandirmasi Olustur
+    eas.json dosyasi gerekli. App Store'a gondermek icin zorunlu.
+    Komut: npx eas-cli init && npx eas build:configure
+    [YAPILDI] eas.json olusturuldu (production, preview, development profilleri).
+    NOT: submit bolumunde appleId, ascAppId, appleTeamId
+    degerlerini kendi Apple Developer hesabinla doldur.
+
+2.3 Nisan 2026 SDK Gerekliligi
+    28 Nisan 2026'dan itibaren uygulamalar iOS 26 SDK ile build edilmeli.
+    Su an Expo SDK 54 kullaniliyor.
+    Expo'nun iOS 26 SDK destekleyen surumune gecis gerekecek.
+    Expo blog ve changelog takip edilmeli.
+
+2.4 Uygulama Stabilitesi
+    - Uygulama herhangi bir anda cokuyorsa reddedilir.
+    - Farkli iPhone modellerinde ekran bozulmasi reddedilme sebebi.
+    - Offline durum duzgun yonetilmeli (bu oyun offline calisiyor, OK).
+    - Arka plana atip geri gelme senaryosu test edilmeli.
+    - Reanimated animasyonlari arka plandan donuste crash yapmamalı.
+
+2.5 Destek ve Iletisim URL'leri
+    - App Store Connect'e gecerli bir destek e-postasi girilmeli.
+    - Bozuk linkler bile reddedilme sebebi olabiliyor.
+
+
+[3] UI/UX VE APPLE TASARIM KRITERLERI
+--------------------------------------------------------------
+
+Apple tasarim ve UX kalitesine cok onem veriyor:
+
+3.1 iOS Human Interface Guidelines Uyumu
+    - Navigation acik ve anlasilir olmali.
+    - Dugmeler sikikik veya carpik gorunmemeli.
+    - Dokunmatik hissiyat, cerceve/constraint uyumu saglanmali.
+
+3.2 Mevcut Durum (Bu Projede)
+    [OK] Safe area insets dogru uygulanmis
+    [OK] Reanimated ile 60/120 FPS animasyonlar
+    [OK] Dark mode destegi var (userInterfaceStyle: "dark")
+    [OK] Haptic feedback kontrol edilebilir (Ayarlar → Titresim)
+    [OK] Error boundary ve fallback ekrani var
+    [OK] Tum ekranlar Turkce
+    [OK] Accessibility label'lar butonlarda mevcut
+    [OK] Portrait orientation kilitli
+    [OK] Cyberpunk temali tutarli tasarim dili
+    [EKLENEBILIR] Dynamic Type destegi (font olcekleme)
+    [EKLENEBILIR] VoiceOver tam uyumluluk testi
+    [EKLENEBILIR] iPad destegi (su an kapali: supportsTablet: false)
+    [EKLENEBILIR] Reduced Motion destegi (useReducedMotion hook)
+
+
+[4] META VERI & APP STORE ASSET'LERI
+--------------------------------------------------------------
+
+4.1 App Ikon
+    - 1024x1024 PNG gerekli (mevcut: assets/icon.png)
+    - Cyberpunk temali, halka motifli profesyonel ikon tasarla
+    - Koyu arka plan + neon cyan/pink halka efekti
+    - Optimize et: TinyPNG ile boyutu kucult
+
+4.2 Ekran Goruntuleri (Zorunlu)
+    - 6.7" iPhone screenshot'lari (iPhone 15 Pro Max) — zorunlu
+    - 6.1" iPhone screenshot'lari — zorunlu
+    - En az 3-5 screenshot:
+      * Ana menu ekrani (RINGLOCK baslik + OYNA butonu)
+      * Oyun icinde MUKEMMEL vurus ani
+      * Yuksek kombo anı (10x+ INANILMAZ)
+      * Mod secim ekrani (4 farkli mod)
+      * Basarimlar ekrani
+      * Game over ekrani (skor + paylas butonu)
+    - Screenshot'lar gercek uygulama ile uyumlu olmali
+
+4.3 Uygulama Aciklamasi
+    Turkce aciklama onerisi:
+    ---
+    RingLock, reflekslerini test eden bagimlilik yapici bir
+    arcade oyunu. Kuculen halkayi tam dogru anda yakala!
+
+    Basit ama ustalasmasi zor: pembe halka kuculdukce
+    hedef halkaya denk geldiginde ekrana dokun.
+
+    Ozellikler:
+    • 4 farkli oyun modu (Klasik, Hardcore, Zen, Speed Rush)
+    • Basarim sistemi (16 farkli basarim)
+    • Kombo sistemi ve hassasiyet derecelendirmesi
+    • Akici 60FPS neon animasyonlar
+    • Dokunsal geri bildirim (haptic)
+    • Skor paylasimi
+    • Tamamen offline calisir
+    ---
+
+4.4 Anahtar Kelimeler
+    - arcade, refleks, zamanlama, halka, hassasiyet, neon,
+      cyberpunk, kombo, beceri oyunu, casual, bagimlilik
+
+4.5 Tanitim Videosu (Opsiyonel ama Etkili)
+    - 30 saniyelik App Preview videosu
+    - Halka kuculme → MUKEMMEL vurus → kombo artisi akisini goster
+    - Farkli modlarin kisa gosterimleri
+
+
+[5] GUVENLIK VE KOD GEREKSINIMLERI
+--------------------------------------------------------------
+
+5.1 Kod Imzalama
+    - Uygulama dogru Apple sertifikalariyla imzalanmali.
+    - EAS Build bu isi otomatik yapar.
+
+5.2 Sifreleme Beyani
+    - HTTPS kullanan uygulamalar sifreleme beyani gerektirebilir.
+    - Bu uygulama ag baglantisi kullanmiyor, sadece AsyncStorage.
+    - App Store Connect'te "Export Compliance" → "No" cevabi verilebilir.
+
+5.3 SDK Guvenligi
+    - Entegre edilen SDK'lar Apple'in guvenlik standartlarini bozmamali.
+    - Tum SDK'larin privacy etiketlerini doldur.
+    - Privacy Nutrition Labels: "Data Not Collected" secilebilir
+      (uygulama sunucuya veri gondermiyor).
+
+
+[6] MONETIZASYON POLITIKALARI (Gelecek Icin)
+--------------------------------------------------------------
+
+Su an uygulama ucretsiz ve IAP yok, ancak ileride eklenirse:
+
+6.1 Apple IAP Kurallari
+    - Dijital icerikler icin ucuncu parti odeme kabul edilemez.
+    - Apple'in In-App Purchase sistemi zorunlu.
+    - Tema/skin gibi icerikler IAP ile satilabilir.
+
+6.2 Reklam Eklenirse
+    - ATT (App Tracking Transparency) izni zorunlu.
+    - Privacy Labels guncellenmeli.
+    - Rewarded ads (reklam izle → ekstra can) eklenmesi planlanabilir.
+
+6.3 Gelir Vergilendirme (Turkiye)
+    - Kazanc varsa sirket olmadan ticari gelir yazmak riskli.
+    - Apple komisyonu: kucuk olcekte %15, buyudukce %30.
+
+
+[7] SURUM YONETIMI VE GUNCELLEMELER
+--------------------------------------------------------------
+
+7.1 Her guncelleme yeniden review surecine girer.
+7.2 Semantic versioning kullan: major.minor.patch (1.0.0, 1.0.1, 1.1.0)
+7.3 buildNumber her submission'da artirilmali.
+7.4 Hotfix / patch surumleri icin TestFlight + phased release kullan.
+7.5 Rollback stratejisi belirle.
+
+
+[8] TEST CHECKLIST - REJECT ALMAMAK ICIN
+--------------------------------------------------------------
+
+[  ] TestFlight'a yukle, en az 3-5 farkli cihazda test et
+[  ] Oyunu hizli hizli oyna, kenar durumlari test et
+[  ] Her 4 modu test et (Classic, Hardcore, Zen, Speed Rush)
+[  ] Hardcore'da 1 miss = game over calisiyormu
+[  ] Zen'de sinirsiz oynama ve ✕ ile cikis calisiyor mu
+[  ] Speed Rush'ta 30 sn timer dogru calisiyor mu
+[  ] Speed Rush'ta sure bitince game over oluyor mu
+[  ] Basarimlar dogru aciliyor mu (skor, kombo, mod bazli)
+[  ] Basarim toast'u gorunuyor ve kayboluyor mu
+[  ] Basarimlar ekraninda kilitli/acik dogru gorunuyor mu
+[  ] Skor paylasma butonu calisiyor mu (Share sheet aciliyor mu)
+[  ] Arka plana atip geri gel — crash olmamali
+[  ] Titresim ayari kapaliyken haptic calismamali
+[  ] Ses ayari kapaliyken ses calmamali
+[  ] Ayarlar degisiklikleri kalici mi kontrol et (uygulama kapat-ac)
+[  ] Best score her mod icin ayri kaydediliyor mu
+[  ] Tum ekranlari farkli iPhone boyutlarinda kontrol et
+[  ] Memory leak kontrolu yap (uzun sureli oyun, ozellikle Zen modu)
+[  ] Game over ekraninda "Tekrar" duzgun calisiyor mu
+[  ] Ana menuye donus duzgun calisiyor mu
+[  ] Mod secim ekrani gorsel olarak duzgun mu
+[  ] Animasyonlar kasma yapmadan calisiyor mu (60 FPS)
+[  ] Ekran dondurmede sorun yok mu (portrait kilitli olmali)
+
+
+[9] APP STORE OPTIMIZATION (ASO)
+--------------------------------------------------------------
+
+9.1 Baslik ve Alt Baslik Optimizasyonu
+    - Baslik: "RingLock - Arcade Refleks Oyunu"
+    - Alt baslik: "Halkaya Tam Zamaninda Dokun"
+
+9.2 Anahtar Kelime Stratejisi
+    - Hedef: arcade, refleks, zamanlama, halka, neon, beceri,
+      kombo, hassasiyet, cyberpunk, casual
+    - Rakiplerin bos biraktigi nis ifadeleri hedefle
+
+9.3 Lokalizasyon
+    - Turkce App Store sayfasi (birincil)
+    - Ingilizce App Store sayfasi da hazirla (global erisim)
+    - Farkli pazarlar icin screenshot'lar
+
+
+[10] BU OTURUMDA YAPILAN DEGISIKLIKLER
+--------------------------------------------------------------
+
+10.1 Zorluk Modlari Sistemi
+     - 4 oyun modu eklendi: Classic, Hardcore, Zen, Speed Rush
+     - Her mod icin farkli parametreler (can, sure, hiz)
+     - Mod secim ekrani (ModeSelect.tsx)
+     - Her mod icin ayri en iyi skor kaydı
+     - Oyun sirasinda mod etiketi (sag ust)
+     - Zen modunda ✕ ile cikis butonu
+     - Speed Rush'ta geri sayim timer'i
+     - Game Over'da mod bilgisi gosterimi
+     - Dosyalar: constants/game.ts, hooks/useGameLoop.ts,
+       components/ModeSelect.tsx, app/index.tsx
+
+10.2 Basarim Sistemi (16 Basarim)
+     - Skor hedefleri: 10, 25, 50, 100 puan
+     - Kombo basarimlari: 10x, 25x, 50x
+     - Mukemmel basarimlari: 5 mukemmel, 15 mukemmel, sadece mukemmel
+     - Mod basarimlari: Hardcore 20, Speed 30, Zen 100
+     - Baglilik basarimlari: 10 oyun, 50 oyun, toplam 500 puan
+     - Basarim toast animasyonu (AchievementToast.tsx)
+     - Basarimlar listesi ekrani (AchievementsOverlay.tsx)
+     - Ana menude BASARIMLAR butonu
+     - AsyncStorage ile kalici depolama
+     - Dosyalar: lib/achievements.ts, components/AchievementToast.tsx,
+       components/AchievementsOverlay.tsx
+
+10.3 Skor Paylasimi
+     - Game Over ekraninda PAYLAS butonu
+     - Native Share API ile skor ve mod bilgisi paylasimi
+     - Dosya: components/GameOverOverlay.tsx
+
+10.4 Turkce Lokalizasyon
+     - Tum ekran metinleri Turkce'ye cevrildi
+     - SKOR, EN IYI, OYNA, OYUN BITTI, TEKRAR, PAYLAS,
+       ANA MENU, AYARLAR, SES, TITRESIM, KAPAT, MOD SEC,
+       GERI, BASARIMLAR, MUKEMMEL, IYI, GEC, INANILMAZ,
+       HARIKA, HALKAYA TAM DOGRU ANDA DOKUN
+     - Hata ekranlari da Turkce (ErrorFallback, NotFound)
+     - Basarim basliklari ve aciklamalari Turkce
+
+
+[11] YAPILACAK OZELLIKLER
+--------------------------------------------------------------
+
+── SKIN / TEMA SISTEMI ──
+
+11.1 Acilabilir Halka Renkleri
+     Skora veya basarimlara gore acilan farkli halka renkleri.
+     Ornekler: Altin halka (50 puan), Mor halka (25x kombo),
+     Gokkusagi halka (tum basarimlar).
+     AsyncStorage ile sahip olunan skin'ler ve aktif skin kaydedilmeli.
+
+11.2 Arka Plan Temalari
+     Farkli arka plan gradyanlari ve grid renkleri.
+     Ornekler: Okyanus (mavi tonlari), Lavlar (kirmizi/turuncu),
+     Orman (yesil tonlari), Galaksi (mor/lacivert).
+     Basarim veya skor hedeflerine baglanabilir.
+
+11.3 Tema Secim Ekrani
+     Ana menuye "TEMALAR" butonu eklenmeli.
+     Acik/kilitli tema onizleme karti gosterimi.
+     Aktif temayi secme ve kaydetme.
+
+── DAILY CHALLENGE ──
+
+11.4 Gunluk Gorev Sistemi
+     Her gun farkli zorluk parametreleriyle ozel bir challenge.
+     Ornekler:
+     - "Bugunun gorevi: 1 canla 15 puan yap"
+     - "Bugunun gorevi: 20 saniyede en yuksek skor"
+     - "Bugunun gorevi: Sadece MUKEMMEL ile 10 puan"
+     Tarih bazli seed ile herkes ayni challenge'i gorur.
+
+11.5 Streak (Seri) Takibi
+     Ust uste kac gun oynandigini takip et.
+     7 gun streak → ozel basarim
+     30 gun streak → ozel tema acilsin
+     Streak kirilirsa sifirlanir.
+     AsyncStorage ile son oynama tarihi ve streak sayaci.
+
+11.6 Daily Challenge UI
+     Ana menude "GUNLUK GOREV" butonu.
+     Gorev aciklamasi, kalan sure (gece yarisina kadar),
+     tamamlanma durumu (basarili/basarisiz/bekliyor).
+     Onceki gunlerin challenge gecmisi (son 7 gun).
+
+
+[12] TASARIM & PROFESYONELLIK IYILESTIRMELERI
+--------------------------------------------------------------
+
+── ANIMASYON & GORSEL EFEKTLER ──
+
+12.1 Yeni Rekor Kutlamasi
+     Yeni rekor kirildiginda ekranda parlama/flash efekti.
+     Game over ekraninda "YENI REKOR!" badge'i ile birlikte.
+     Haptic ile guclu titresim geri bildirimi.
+
+12.2 Splash Screen Gecisi *** ONEMLI ***
+     Su an splash → uygulama gecisi ani ve sert.
+     expo-splash-screen ile animasyonlu gecis yapilabilir:
+     fade-out veya halka efekti ile smooth transition.
+     Apple reviewer'da kotu izlenim birakir, red sebebi olmasa
+     bile profesyonellik acisinden kesinlikle yapilmali.
+
+── KULLANICI DENEYIMI (UX) ──
+
+12.3 Rate & Review Prompt
+     expo-store-review paketi ile belirli kosullarda
+     (5+ oyun oynandiktan sonra) App Store degerlendirme prompt'u.
+     Apple'in kendi API'si kullanildigi icin red riski yok.
+     Cok sik gostermemek icin cooldown suresi ekle (30 gun).
+
+12.4 Uygulama Versiyonu Gosterimi
+     Ayarlar ekraninin en altinda kucuk bir "RingLock v1.0.0" metni.
+     Destek taleplerinde versiyon bilgisi lazim olur.
+     expo-constants'tan cekilebilir.
+
+12.5 Verileri Sifirlama Butonu
+     Ayarlar ekraninda "Verileri Sifirla" butonu.
+     Best score, basarimlar, istatistikler ve ayarlari sifirlama.
+     Onay dialogu ile korunmali ("Emin misiniz? Tum veriler silinecek.").
+
+── ERISILEBILIRLIK (ACCESSIBILITY) ──
+
+12.6 Reduced Motion Destegi
+     iOS'ta "Hareketi Azalt" ayari aciksa animasyonlar
+     sadelestirilmeli. useReducedMotion() hook'u ile kontrol.
+
+12.7 VoiceOver Tam Uyumluluk
+     Tum interaktif elemanlarin anlamli accessibility label'lari olmali.
+     Oyun durumu (skor, can, kombo) ekran okuyucuya bildirilmeli.
+
+
+[13] KAYNAKLAR
+--------------------------------------------------------------
+
+- App Review Guidelines:
+  https://developer.apple.com/app-store/review/guidelines/
+
+- iOS Human Interface Guidelines:
+  https://developer.apple.com/design/human-interface-guidelines/
+
+- Nisan 2026 SDK Degisiklikleri:
+  https://medium.com/@thakurneeshu280/apple-app-store-submission-changes-april-2026
+
+- Yas Derecelendirme Guncellemesi:
+  https://developer.apple.com/news/upcoming-requirements/?id=07242025a
+
+- Apple Developer Guncel Haberler:
+  https://developer.apple.com/news/
+
+- Expo EAS Build Dokumantasyonu:
+  https://docs.expo.dev/build/introduction/
+
+- App Store Connect Yardim:
+  https://developer.apple.com/help/app-store-connect/
+
+
+[14] OYUNU DAHA SURUKLEYICI YAPACAK ONERILER
+--------------------------------------------------------------
+
+── KISA VADE (v1.1) ──
+
+14.1 Tutorial / Ilk Acilis Rehberi
+     Ilk kez oynayan kullanici ne yapacagini anlamayabilir.
+     3 adimlik animasyonlu intro:
+     1) "Kuculen halkayi gor" 2) "Tam ustune gelince dokun"
+     3) "Kombolarla skor katle"
+     AsyncStorage ile sadece ilk seferde gosterilir.
+
+14.2 Parcacik Efektleri
+     MUKEMMEL vurusta halkanin etrafinda patlayan neon parcaciklar.
+     Reanimated ile lightweight particle sistemi.
+     Oyun hissiyatina buyuk etki ("juice" faktoru).
+
+14.3 Ekran Sarsintisi (Screen Shake)
+     Miss oldugunda hafif ekran shake efekti.
+     Reanimated ile translateX/Y titresim animasyonu.
+     Hata hissini guclendiren gorsel geri bildirim.
+
+14.4 Yeni Rekor Kutlamasi
+     Rekor kirildiginda ozel animasyon + "YENI REKOR!" badge'i.
+     Game Over ekraninda altin parlama efekti.
+     Haptic ile guclu titresim geri bildirimi.
+
+14.5 Ses Tasarimi Zengilestirme
+     Perfect/Good/Late icin farkli sesler.
+     Kombo artisinda pitch yukselen ses efekti.
+     Miss icin dusuk tonlu hata sesi.
+
+── ORTA VADE (v1.2) ──
+
+14.6 Daily Challenge (Gunluk Gorev)
+     Her gun farkli zorluk parametreleriyle ozel challenge.
+     Tarih bazli seed ile herkes ayni gorevi gorur.
+     Kullaniciyi her gun geri getiren en guclu mekanik.
+
+14.7 Streak (Seri) Sistemi
+     Ust uste kac gun oynandigini takip et.
+     7 gun streak → ozel basarim.
+     30 gun streak → ozel tema acilsin.
+
+14.8 Istatistik Dashboard
+     Toplam oyun, ortalama skor, en iyi kombo, perfect orani.
+     Grafik veya gorsel istatistik kartlari.
+
+14.9 Tema / Skin Sistemi
+     Basarimlara bagli acilan halka renkleri ve arka planlar.
+     Koleksiyonculuk hissi yaratir.
+
+── UZUN VADE (v2.0) ──
+
+14.10 Game Center Entegrasyonu
+      Global leaderboard, arkadaslarla yarisma.
+      Apple'in kendi sistemi, red riski yok.
+
+14.11 Haftalik Turnuva
+      Haftanin en yuksek skoru icin siralama.
+
+14.12 Arkadasa Meydan Okuma
+      Skor paylasirken "beni gec" butonu ile deep link.
+
+14.13 Yeni Oyun Modlari
+      "Mirror" mod — halka buyuyor (ters mekanik).
+      "Dual" mod — 2 halka ayni anda.
+      Belirli basarimlardan sonra acilir.
+
+14.14 Rewarded Ads ile Monetizasyon
+      Reklam izle → ekstra can kazan.
+      ATT izni ve Privacy Labels guncellenmeli.
+
+NOT: En cok etkiyi "Tutorial + Parcacik Efektleri + Daily Challenge"
+kombinasyonu yapar. Tutorial ile kullanici kaybini azaltir,
+efektlerle "juice" hissi verirsin, daily challenge ile
+retansiyon saglarsin.
+
+
+==============================================================
+  Not: Bu liste 8 Mart 2026 tarihinde olusturulmustur.
+  9 Mart 2026'da guncellendi: Eksik maddeler eklendi,
+  yapilan isler isaretlendi, oyun gelistirme onerileri eklendi.
+  Apple kurallari surekli guncellenir, yayin oncesi
+  developer.apple.com'dan son durumu kontrol edin.
+==============================================================

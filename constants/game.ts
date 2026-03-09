@@ -1,5 +1,10 @@
+import { Dimensions } from "react-native";
+
+export const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
+
 export const TARGET_R = 62;
 export const TOLERANCE = 18;
+export const MAX_R = Math.max(SCREEN_W, SCREEN_H) * 0.58;
 export const INITIAL_DUR = 2200;
 export const MIN_DUR = 460;
 export const DUR_STEP = 48;
@@ -8,9 +13,11 @@ export const EDGE_PAD = TARGET_R + 28;
 
 export const GLOW_MID_R = TARGET_R + 14;
 export const GLOW_OUT_R = TARGET_R + 36;
+export const SHRINK_GLOW_EXTRA = 15;
+export const SHRINK_GLOW_FAINT_EXTRA = 36;
 
 // ─── Hit Quality Thresholds ──────────────────────────────────────────────────
-export const PERFECT_THRESHOLD = 5;   // ±5px = PERFECT
+export const PERFECT_THRESHOLD = 5;   // ±5px = PERFECT (neredeyse birebir üst üste)
 export const GOOD_THRESHOLD = 10;     // ±10px = GOOD
 
 // ─── Lives ──────────────────────────────────────────────────────────────────
@@ -42,8 +49,59 @@ export const C = {
 export type Phase = "menu" | "playing" | "gameover";
 export type HitQuality = "perfect" | "good" | "late" | null;
 
-// ─── Layout Constants (Magic Numbers Removal) ─────────────────────────────────
-export const LAYOUT = {
-  GRID_STEP: 52,
-  TOP_Y_OFFSET: 170,
+// ─── Game Modes ──────────────────────────────────────────────────────────────
+export type GameMode = "classic" | "hardcore" | "zen" | "speed";
+
+export interface GameModeConfig {
+  key: GameMode;
+  label: string;
+  description: string;
+  lives: number;        // 0 = infinite
+  timeLimitSec: number; // 0 = no limit
+  initialDur: number;
+  minDur: number;
+  durStep: number;
+}
+
+export const GAME_MODES: Record<GameMode, GameModeConfig> = {
+  classic: {
+    key: "classic",
+    label: "CLASSIC",
+    description: "3 can, artan zorluk",
+    lives: MAX_LIVES,
+    timeLimitSec: 0,
+    initialDur: INITIAL_DUR,
+    minDur: MIN_DUR,
+    durStep: DUR_STEP,
+  },
+  hardcore: {
+    key: "hardcore",
+    label: "HARDCORE",
+    description: "1 can, hata yok",
+    lives: 1,
+    timeLimitSec: 0,
+    initialDur: INITIAL_DUR,
+    minDur: MIN_DUR,
+    durStep: DUR_STEP,
+  },
+  zen: {
+    key: "zen",
+    label: "ZEN",
+    description: "Can yok, rahat oyna",
+    lives: 0,
+    timeLimitSec: 0,
+    initialDur: INITIAL_DUR + 400,
+    minDur: MIN_DUR + 100,
+    durStep: DUR_STEP - 12,
+  },
+  speed: {
+    key: "speed",
+    label: "SPEED RUSH",
+    description: "30 saniye, hızlı başla",
+    lives: 0,
+    timeLimitSec: 30,
+    initialDur: 1200,
+    minDur: MIN_DUR,
+    durStep: DUR_STEP + 10,
+  },
 };
