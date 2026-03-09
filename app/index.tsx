@@ -11,13 +11,17 @@ import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { C, HitQuality } from "@/constants/game";
+import { C, HitQuality, GameMode, GAME_MODES } from "@/constants/game";
 import { useGameLoop } from "@/hooks/useGameLoop";
 import { GridBackground } from "@/components/GridBackground";
 import { MainMenu } from "@/components/MainMenu";
+import { ModeSelect } from "@/components/ModeSelect";
 import { GameOverOverlay } from "@/components/GameOverOverlay";
 import { RingsAnchor, FlashOverlay } from "@/components/TargetRings";
 import { SettingsOverlay } from "@/components/SettingsOverlay";
+import { AchievementToast } from "@/components/AchievementToast";
+import { AchievementsOverlay } from "@/components/AchievementsOverlay";
+import { ScoresOverlay } from "@/components/ScoresOverlay";
 
 // ─── Hit Quality Label ────────────────────────────────────────────────────────
 function HitQualityLabel({ quality }: { quality: HitQuality }) {
@@ -45,7 +49,7 @@ function HitQualityLabel({ quality }: { quality: HitQuality }) {
   if (!quality) return null;
 
   const label =
-    quality === "perfect" ? "PERFECT" : quality === "good" ? "GOOD" : "LATE";
+    quality === "perfect" ? "MUKEMMEL" : quality === "good" ? "IYI" : "GEC";
   const color =
     quality === "perfect" ? C.gold : quality === "good" ? C.cyan : C.pink;
 
@@ -76,7 +80,7 @@ function ComboCounter({ combo }: { combo: number }) {
   if (combo < 2) return null;
   const comboColor = combo >= 10 ? C.gold : combo >= 5 ? C.pink : C.cyan;
   const comboLabel =
-    combo >= 10 ? "INSANE" : combo >= 5 ? "GREAT" : combo >= 3 ? "GOOD" : "";
+    combo >= 10 ? "INANILMAZ" : combo >= 5 ? "HARIKA" : combo >= 3 ? "IYI" : "";
 
   return (
     <Animated.View style={[s.comboWrap, animStyle]} pointerEvents="none">
@@ -89,18 +93,28 @@ function ComboCounter({ combo }: { combo: number }) {
 }
 
 // ─── Lives Display ────────────────────────────────────────────────────────────
-function LivesDisplay({ lives, topPad }: { lives: number; topPad: number }) {
+function LivesDisplay({ lives, maxLives, topPad }: { lives: number; maxLives: number; topPad: number }) {
+  if (maxLives === 0) return null;
   return (
     <View style={[s.livesWrap, { top: topPad + 12 }]} pointerEvents="none">
-      {Array.from({ length: 3 }).map((_, i) => (
-        <View
+      {Array.from({ length: maxLives }).map((_, i) => (
+        <Text
           key={i}
-          style={[
-            s.heartDot,
-            { backgroundColor: i < lives ? C.pink : "rgba(255,0,102,0.2)" },
-          ]}
-        />
+          style={[s.heartIcon, { opacity: i < lives ? 1 : 0.2 }]}
+        >
+          ❤️
+        </Text>
       ))}
+    </View>
+  );
+}
+
+// ─── Timer Display (Speed mode) ──────────────────────────────────────────────
+function TimerDisplay({ timeLeft, topPad }: { timeLeft: number; topPad: number }) {
+  const isLow = timeLeft <= 10;
+  return (
+    <View style={[s.timerWrap, { top: topPad + 12 }]} pointerEvents="none">
+      <Text style={[s.timerText, isLow && { color: C.pink }]}>{timeLeft}s</Text>
     </View>
   );
 }
@@ -121,16 +135,34 @@ export default function GameScreen() {
   const topPad = Platform.OS === "web" ? Math.max(insets.top, 67) : insets.top;
   const botPad = Platform.OS === "web" ? Math.max(insets.bottom, 34) : insets.bottom;
   const [showSettings, setShowSettings] = useState(false);
+  const [showModeSelect, setShowModeSelect] = useState(false);
+  const [showAchievements, setShowAchievements] = useState(false);
+  const [showScores, setShowScores] = useState(false);
 
   const {
     score, bestScore, phase, finalScore,
     combo, maxCombo, hitQuality, lives, visualPhase,
+    gameMode, timeLeft, newAchievements,
     ringRadius, flashOpacity, targetScale, targetColor, anchorX, anchorY,
     beginGame, handleRestart, handleMenu, handleScreenTap,
   } = useGameLoop(topPad, botPad);
 
+  const [toastIndex, setToastIndex] = useState(0);
+
+  useEffect(() => {
+    if (newAchievements.length > 0) setToastIndex(0);
+  }, [newAchievements]);
+
+  const modeConfig = GAME_MODES[gameMode];
   const showRings = phase === "playing" || phase === "gameover";
   const bgColors = getPhaseColors(visualPhase);
+
+  const onPlay = () => setShowModeSelect(true);
+  const onModeSelect = (mode: GameMode) => {
+    setShowModeSelect(false);
+    beginGame(mode);
+  };
+  const onModeBack = () => setShowModeSelect(false);
 
   return (
     <View style={s.root}>
@@ -155,19 +187,51 @@ export default function GameScreen() {
       )}
 
       {/* Lives — top left */}
-      {phase === "playing" && <LivesDisplay lives={lives} topPad={topPad} />}
+      {phase === "playing" && (
+        <LivesDisplay lives={lives} maxLives={modeConfig.lives} topPad={topPad} />
+      )}
 
-      {/* Score — Android-safe: no textShadow */}
+      {/* Timer — top left (speed mode, replaces lives) */}
+      {phase === "playing" && modeConfig.timeLimitSec > 0 && (
+        <TimerDisplay timeLeft={timeLeft} topPad={topPad} />
+      )}
+
+      {/* Mode badge / quit button — top right during gameplay */}
+      {phase === "playing" && gameMode !== "classic" && (
+        <View style={[s.modeBadge, { top: topPad + 14 }]}>
+          {modeConfig.lives === 0 ? (
+            <Pressable
+              onPress={handleMenu}
+              hitSlop={14}
+              style={({ pressed }) => [s.quitBtn, { borderColor: `${getModeColor(gameMode)}40` }, pressed && { opacity: 0.5 }]}
+            >
+              <Text style={[s.quitIcon, { color: getModeColor(gameMode) }]}>←</Text>
+              <Text style={[s.quitLabel, { color: getModeColor(gameMode) }]}>CIK</Text>
+            </Pressable>
+          ) : (
+            <Text style={[s.modeBadgeText, { color: getModeColor(gameMode) }]}>
+              {modeConfig.label}
+            </Text>
+          )}
+        </View>
+      )}
+
+      {/* Score */}
       {phase === "playing" && (
         <View
-          style={[s.scoreArea, { paddingTop: topPad + 16 }]}
+          style={[s.scoreArea, { paddingTop: topPad + 14 }]}
           pointerEvents="none"
         >
-          <Text style={s.scoreLabel}>SCORE</Text>
-          <Text style={s.scoreValue}>{score}</Text>
-          {bestScore > 0 && (
-            <Text style={s.bestInline}>BEST  {bestScore}</Text>
-          )}
+          <View style={s.scoreBox}>
+            <Text style={s.scoreLabel}>SKOR</Text>
+            <Text style={s.scoreValue}>{score}</Text>
+            {bestScore > 0 && (
+              <>
+                <View style={s.scoreDivider} />
+                <Text style={s.bestInline}>EN IYI  {bestScore}</Text>
+              </>
+            )}
+          </View>
         </View>
       )}
 
@@ -192,23 +256,23 @@ export default function GameScreen() {
       <FlashOverlay opacity={flashOpacity} />
 
       {/* Main menu + settings gear */}
-      {phase === "menu" && (
+      {phase === "menu" && !showModeSelect && (
         <>
           <MainMenu
-            onPlay={beginGame}
+            onPlay={onPlay}
+            onAchievements={() => setShowAchievements(true)}
+            onScores={() => setShowScores(true)}
+            onSettings={() => setShowSettings(true)}
             bestScore={bestScore}
             topPad={topPad}
             botPad={botPad}
           />
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Open Settings"
-            style={[s.settingsBtn, { top: topPad + 14 }]}
-            onPress={() => setShowSettings(true)}
-          >
-            <Text style={s.settingsIcon}>⚙</Text>
-          </Pressable>
         </>
+      )}
+
+      {/* Mode selection */}
+      {phase === "menu" && showModeSelect && (
+        <ModeSelect onSelect={onModeSelect} onBack={onModeBack} />
       )}
 
       {/* Game over */}
@@ -217,6 +281,7 @@ export default function GameScreen() {
           score={finalScore}
           bestScore={bestScore}
           maxCombo={maxCombo}
+          gameMode={gameMode}
           onRestart={handleRestart}
           onMenu={handleMenu}
         />
@@ -226,8 +291,36 @@ export default function GameScreen() {
       {showSettings && (
         <SettingsOverlay onClose={() => setShowSettings(false)} />
       )}
+
+      {/* Scores overlay */}
+      {showScores && (
+        <ScoresOverlay onClose={() => setShowScores(false)} />
+      )}
+
+      {/* Achievements overlay */}
+      {showAchievements && (
+        <AchievementsOverlay onClose={() => setShowAchievements(false)} />
+      )}
+
+      {/* Achievement toast */}
+      {newAchievements.length > 0 && toastIndex < newAchievements.length && (
+        <AchievementToast
+          key={newAchievements[toastIndex].id}
+          achievement={newAchievements[toastIndex]}
+          onDone={() => setToastIndex((i) => i + 1)}
+        />
+      )}
     </View>
   );
+}
+
+function getModeColor(mode: GameMode): string {
+  switch (mode) {
+    case "hardcore": return C.pink;
+    case "zen": return C.purple;
+    case "speed": return C.gold;
+    default: return C.cyan;
+  }
 }
 
 const s = StyleSheet.create({
@@ -240,34 +333,35 @@ const s = StyleSheet.create({
     alignItems: "center",
     zIndex: 5,
   },
+  scoreBox: {
+    alignItems: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 24,
+  },
   scoreLabel: {
     fontFamily: "Orbitron_400Regular",
-    fontSize: 11,
-    letterSpacing: 5,
+    fontSize: 9,
+    letterSpacing: 6,
     color: C.subtleText,
-    marginBottom: 2,
+    marginBottom: 4,
   },
   scoreValue: {
     fontFamily: "Orbitron_900Black",
-    fontSize: 48,
+    fontSize: 44,
     color: C.cyan,
-    lineHeight: 56,
-    // Android'de textShadow büyük boy fontlarda kare render yapıyor
-    // Bu yüzden sadece iOS'ta shadow kullanıyoruz
-    ...(Platform.OS === "ios"
-      ? {
-        textShadowColor: C.cyan,
-        textShadowRadius: 14,
-        textShadowOffset: { width: 0, height: 0 },
-      }
-      : {}),
+    lineHeight: 50,
+  },
+  scoreDivider: {
+    width: 30,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: "rgba(0,255,232,0.15)",
+    marginVertical: 6,
   },
   bestInline: {
     fontFamily: "Orbitron_400Regular",
-    fontSize: 11,
+    fontSize: 9,
     letterSpacing: 4,
     color: C.subtleText,
-    marginTop: 4,
   },
   hitQualityWrap: {
     position: "absolute",
@@ -307,19 +401,46 @@ const s = StyleSheet.create({
     gap: 6,
     zIndex: 10,
   },
-  heartDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+  heartIcon: {
+    fontSize: 16,
   },
-  settingsBtn: {
+  timerWrap: {
+    position: "absolute",
+    left: 20,
+    zIndex: 10,
+  },
+  timerText: {
+    fontFamily: "Orbitron_700Bold",
+    fontSize: 16,
+    color: C.cyan,
+    letterSpacing: 2,
+  },
+  modeBadge: {
     position: "absolute",
     right: 20,
-    zIndex: 20,
-    padding: 8,
+    zIndex: 10,
   },
-  settingsIcon: {
-    fontSize: 24,
-    color: C.subtleText,
+  modeBadgeText: {
+    fontFamily: "Orbitron_400Regular",
+    fontSize: 9,
+    letterSpacing: 3,
+  },
+  quitBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    borderWidth: 1,
+    borderRadius: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  quitIcon: {
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  quitLabel: {
+    fontFamily: "Orbitron_700Bold",
+    fontSize: 9,
+    letterSpacing: 2,
   },
 });
