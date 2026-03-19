@@ -19,6 +19,9 @@ import {
     PERFECT_THRESHOLD, GOOD_THRESHOLD,
     MAX_LIVES, COMBO_FOR_EXTRA_LIFE,
 } from "@/constants/game";
+import { recordPlayToday } from "@/lib/streak";
+import { generateDailyChallenge, checkAndCompleteDailyChallenge } from "@/lib/dailyChallenge";
+import { maybeRequestReview } from "@/lib/rateReview";
 
 function randomTargetPos(topInset: number, botInset: number) {
     const topY = (Platform.OS === "web" ? Math.max(topInset, 67) : topInset) + 200;
@@ -139,6 +142,16 @@ export function useGameLoop(topPad: number, botPad: number) {
         playSound("gameover");
         saveBest(s, modeRef.current);
 
+        recordPlayToday();
+
+        const dailyChallenge = generateDailyChallenge();
+        checkAndCompleteDailyChallenge(dailyChallenge, {
+            score: s,
+            maxCombo: maxComboRef.current,
+            perfectCount: perfectCountRef.current,
+            gameMode: modeRef.current,
+        });
+
         updateLifetimeStats(s).then(({ totalGames, totalScore }) => {
             const stats: GameStats = {
                 score: s,
@@ -154,6 +167,7 @@ export function useGameLoop(topPad: number, botPad: number) {
             checkAchievements(stats).then((unlocked) => {
                 if (unlocked.length > 0) setNewAchievements(unlocked);
             });
+            maybeRequestReview(totalGames);
         });
     }, [saveBest, haptic, playSound, clearTimer]);
 

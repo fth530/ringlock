@@ -12,6 +12,7 @@ import {
 } from "@expo-google-fonts/orbitron";
 import { soundManager } from "@/lib/sounds";
 import { SettingsProvider } from "@/lib/SettingsContext";
+import { ThemeProvider } from "@/lib/ThemeContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -65,11 +66,13 @@ export default function RootLayout() {
   return (
     <ErrorBoundary>
       <SettingsProvider>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <Animated.View style={[{ flex: 1 }, fadeStyle]}>
-            <RootLayoutNav />
-          </Animated.View>
-        </GestureHandlerRootView>
+        <ThemeProvider>
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <Animated.View style={[{ flex: 1 }, fadeStyle]}>
+              <RootLayoutNav />
+            </Animated.View>
+          </GestureHandlerRootView>
+        </ThemeProvider>
       </SettingsProvider>
     </ErrorBoundary>
   );

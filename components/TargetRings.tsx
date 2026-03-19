@@ -87,11 +87,9 @@ export function TargetRing({
 }
 
 // ─── Shrinking Ring ─────────────────────────────────────────────────────────
-// Sabit boyutlu View + scale transform.
-// Android'de elevation ve backgroundColor kullanmıyoruz — sadece borderWidth.
 const FIXED_R = 150;
 
-export function ShrinkingRing({ radius }: { radius: SharedValue<number> }) {
+export function ShrinkingRing({ radius, color = C.pink }: { radius: SharedValue<number>; color?: string }) {
     const ringStyle = useAnimatedStyle(() => {
         const scaleFactor = radius.value / FIXED_R;
         return {
@@ -106,7 +104,12 @@ export function ShrinkingRing({ radius }: { radius: SharedValue<number> }) {
 
     return (
         <Animated.View
-            style={[styles.shrinkRingFixed, ringStyle]}
+            style={[
+                styles.shrinkRingFixed,
+                { borderColor: color },
+                Platform.OS === "ios" ? { shadowColor: color } : {},
+                ringStyle,
+            ]}
         />
     );
 }
@@ -117,12 +120,14 @@ export function RingsAnchor({
     ringRadius,
     targetScale,
     targetColor,
+    ringColor,
 }: {
     anchorX: SharedValue<number>;
     anchorY: SharedValue<number>;
     ringRadius: SharedValue<number>;
     targetScale: SharedValue<number>;
     targetColor: SharedValue<number>;
+    ringColor?: string;
 }) {
     const anchorStyle = useAnimatedStyle(() => ({
         left: anchorX.value,
@@ -135,7 +140,7 @@ export function RingsAnchor({
             pointerEvents="none"
         >
             <TargetRing scale={targetScale} colorProgress={targetColor} />
-            <ShrinkingRing radius={ringRadius} />
+            <ShrinkingRing radius={ringRadius} color={ringColor} />
         </Animated.View>
     );
 }

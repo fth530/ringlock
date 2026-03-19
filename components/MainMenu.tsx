@@ -80,6 +80,8 @@ export function MainMenu({
     onAchievements,
     onScores,
     onSettings,
+    onTheme,
+    onDailyChallenge,
     bestScore,
     topPad,
     botPad,
@@ -88,6 +90,8 @@ export function MainMenu({
     onAchievements: () => void;
     onScores: () => void;
     onSettings: () => void;
+    onTheme: () => void;
+    onDailyChallenge: () => void;
     bestScore: number;
     topPad: number;
     botPad: number;
@@ -166,6 +170,30 @@ export function MainMenu({
                             >
                                 <Text style={s.iconEmoji}>🏆</Text>
                                 <Text style={[s.iconLabel, { color: C.cyan }]}>SKORLAR</Text>
+                            </Pressable>
+
+                            <View style={s.iconDivider} />
+
+                            <Pressable
+                                accessibilityRole="button"
+                                accessibilityLabel="Open Themes"
+                                onPress={onTheme}
+                                style={({ pressed }) => [s.iconBtn, pressed && { opacity: 0.6 }]}
+                            >
+                                <Text style={s.iconEmoji}>🎨</Text>
+                                <Text style={[s.iconLabel, { color: C.purple }]}>TEMALAR</Text>
+                            </Pressable>
+
+                            <View style={s.iconDivider} />
+
+                            <Pressable
+                                accessibilityRole="button"
+                                accessibilityLabel="Daily Challenge"
+                                onPress={onDailyChallenge}
+                                style={({ pressed }) => [s.iconBtn, pressed && { opacity: 0.6 }]}
+                            >
+                                <Text style={s.iconEmoji}>🎯</Text>
+                                <Text style={[s.iconLabel, { color: C.gold }]}>GÖREV</Text>
                             </Pressable>
 
                             <View style={s.iconDivider} />

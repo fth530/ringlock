@@ -24,6 +24,9 @@ import { AchievementsOverlay } from "@/components/AchievementsOverlay";
 import { ScoresOverlay } from "@/components/ScoresOverlay";
 import { ParticleEffect } from "@/components/ParticleEffect";
 import { TutorialOverlay, shouldShowTutorial } from "@/components/TutorialOverlay";
+import { ThemeOverlay } from "@/components/ThemeOverlay";
+import { DailyChallengeOverlay } from "@/components/DailyChallengeOverlay";
+import { useTheme } from "@/lib/ThemeContext";
 
 // ─── Hit Quality Label ────────────────────────────────────────────────────────
 function HitQualityLabel({ quality }: { quality: HitQuality }) {
@@ -136,11 +139,14 @@ export default function GameScreen() {
   const insets = useSafeAreaInsets();
   const topPad = Platform.OS === "web" ? Math.max(insets.top, 67) : insets.top;
   const botPad = Platform.OS === "web" ? Math.max(insets.bottom, 34) : insets.bottom;
+  const { activeRing, activeBg } = useTheme();
   const [showSettings, setShowSettings] = useState(false);
   const [showModeSelect, setShowModeSelect] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showScores, setShowScores] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showTheme, setShowTheme] = useState(false);
+  const [showDailyChallenge, setShowDailyChallenge] = useState(false);
 
   const {
     score, bestScore, phase, finalScore,
@@ -167,7 +173,7 @@ export default function GameScreen() {
 
   const modeConfig = GAME_MODES[gameMode];
   const showRings = phase === "playing" || phase === "gameover";
-  const bgColors = getPhaseColors(visualPhase);
+  const bgColors = visualPhase <= 1 ? activeBg.colors : getPhaseColors(visualPhase);
 
   const onPlay = () => setShowModeSelect(true);
   const onModeSelect = (mode: GameMode) => {
@@ -265,6 +271,7 @@ export default function GameScreen() {
           ringRadius={ringRadius}
           targetScale={targetScale}
           targetColor={targetColor}
+          ringColor={activeRing.color}
         />
       )}
 
@@ -284,6 +291,8 @@ export default function GameScreen() {
             onAchievements={() => setShowAchievements(true)}
             onScores={() => setShowScores(true)}
             onSettings={() => setShowSettings(true)}
+            onTheme={() => setShowTheme(true)}
+            onDailyChallenge={() => setShowDailyChallenge(true)}
             bestScore={bestScore}
             topPad={topPad}
             botPad={botPad}
@@ -336,6 +345,16 @@ export default function GameScreen() {
       {/* Tutorial overlay — shown on first launch */}
       {showTutorial && (
         <TutorialOverlay onDone={() => setShowTutorial(false)} />
+      )}
+
+      {/* Theme overlay */}
+      {showTheme && (
+        <ThemeOverlay onClose={() => setShowTheme(false)} />
+      )}
+
+      {/* Daily Challenge overlay */}
+      {showDailyChallenge && (
+        <DailyChallengeOverlay onClose={() => setShowDailyChallenge(false)} />
       )}
     </Animated.View>
   );

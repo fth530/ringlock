@@ -20,6 +20,11 @@ const ALL_KEYS = [
     "ringlock_achievements",
     "ringlock_total_games",
     "ringlock_total_score",
+    "ringlock_tutorial_done",
+    "ringlock_theme",
+    "ringlock_streak",
+    "ringlock_last_play_date",
+    "ringlock_last_review_date",
 ];
 
 const SettingsContext = createContext<SettingsState>({
