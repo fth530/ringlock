@@ -40,13 +40,17 @@ export const ACHIEVEMENTS: Achievement[] = [
     { id: "perfect_only", title: "KUSURSUZ", description: "10+ skor, sadece MUKEMMEL", icon: "💠", condition: (s) => s.score >= 10 && s.goodCount === 0 && s.lateCount === 0 && s.missCount === 0 },
 
     // Mod basarimlari
-    { id: "hardcore_20", title: "CELIK SINIRLER", description: "Hardcore'da 20 puan", icon: "🗡", condition: (s) => s.gameMode === "hardcore" && s.score >= 20 },
-    { id: "speed_30", title: "HIZ SEYTANI", description: "Speed Rush'ta 30 puan", icon: "⏱", condition: (s) => s.gameMode === "speed" && s.score >= 30 },
-    { id: "zen_100", title: "IC HUZUR", description: "Zen'de 100 puan", icon: "🧘", condition: (s) => s.gameMode === "zen" && s.score >= 100 },
+    { id: "hardcore_20", title: "ÇELİK SINIRLAR", description: "Hardcore'da 20 puan", icon: "🗡", condition: (s) => s.gameMode === "hardcore" && s.score >= 20 },
+    { id: "speed_30", title: "HIZ ŞEYTANI", description: "Speed Rush'ta 30 puan", icon: "⏱", condition: (s) => s.gameMode === "speed" && s.score >= 30 },
+    { id: "zen_100", title: "İÇ HUZUR", description: "Zen'de 100 puan", icon: "🧘", condition: (s) => s.gameMode === "zen" && s.score >= 100 },
+    { id: "mirror_15", title: "AYNA USTASI", description: "Ayna modunda 15 puan", icon: "🪞", condition: (s) => s.gameMode === "mirror" && s.score >= 15 },
+    { id: "mirror_30", title: "TERSYÜZ", description: "Ayna modunda 30 puan", icon: "🔄", condition: (s) => s.gameMode === "mirror" && s.score >= 30 },
+    { id: "dual_10", title: "ÇİFT YETENEK", description: "İkiz modunda 10 puan", icon: "⊕", condition: (s) => s.gameMode === "dual" && s.score >= 10 },
+    { id: "dual_25", title: "İKİZ EFSANE", description: "İkiz modunda 25 puan", icon: "✦", condition: (s) => s.gameMode === "dual" && s.score >= 25 },
 
     // Baglilik
     { id: "games_10", title: "SADIK OYUNCU", description: "10 oyun oyna", icon: "🏅", condition: (s) => s.totalGames >= 10 },
-    { id: "games_50", title: "BAGIMLI", description: "50 oyun oyna", icon: "🏆", condition: (s) => s.totalGames >= 50 },
+    { id: "games_50", title: "BAĞIMLI", description: "50 oyun oyna", icon: "🏆", condition: (s) => s.totalGames >= 50 },
     { id: "total_500", title: "KASICI", description: "Toplam 500 puan kas", icon: "⭐", condition: (s) => s.totalScore >= 500 },
 ];
 

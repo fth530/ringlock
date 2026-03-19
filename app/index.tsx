@@ -159,7 +159,7 @@ export default function GameScreen() {
     combo, maxCombo, hitQuality, lives, visualPhase,
     gameMode, timeLeft, newAchievements,
     perfectTrigger, perfectPos, isNewRecord,
-    isDualMode,
+    isDualMode, reducedMotion,
     ringRadius, flashOpacity, targetScale, targetColor, anchorX, anchorY,
     ringRadius2, anchorX2, anchorY2, targetScale2, targetColor2,
     shakeAnim,
@@ -300,8 +300,8 @@ export default function GameScreen() {
       {/* Flash */}
       <FlashOverlay opacity={flashOpacity} />
 
-      {/* Particle effects on PERFECT hit */}
-      {phase === "playing" && perfectTrigger > 0 && (
+      {/* Particle effects on PERFECT hit (skipped when Reduced Motion is on) */}
+      {!reducedMotion && phase === "playing" && perfectTrigger > 0 && (
         <ParticleEffect key={perfectTrigger} cx={perfectPos.x} cy={perfectPos.y} />
       )}
 

@@ -84,6 +84,14 @@ patches/                      # patch-package patches for expo-asset
 - Screen shake animation on miss
 - Animated gold "YENİ REKOR" badge in GameOverOverlay
 
+### Phase 6 — App Store Hazırlık
+- 4 yeni başarım: AYNA USTASI (mirror 15), TERSYÜZ (mirror 30), ÇİFT YETENEK (dual 10), İKİZ EFSANE (dual 25) → toplam 22 başarım
+- Reduced Motion desteği: iOS "Hareketi Azalt" ayarına uyum — triggerShake, flash overlay ve particle efektleri atlanır
+- useReducedMotion() hook'u useGameLoop'a eklendi; reducedMotion GameScreen'e export edildi
+- Profesyonel 1024×1024 app icon üretildi (siyah zemin, cyan dış halka + pembe iç halka, neon glow efekti)
+- Matching splash screen üretildi (9:16 portrait, aynı halka teması)
+- app-store-metadata.md oluşturuldu: TR/EN açıklama, anahtar kelimeler, gizlilik politikası içeriği, screenshot planı, EAS build komutları
+
 ### Phase 5 — New Game Modes
 - Mirror Mode ("AYNA"): ring grows 0→MAX_R instead of shrinking; miss when it overshoots; unlocks at 10+ best score
 - Dual Mode ("İKİZ"): 2 rings simultaneously at different positions/speeds (ring2 = 80% speed); tap evaluates both; both-hit grants +2 score; unlocks at 25+ best score

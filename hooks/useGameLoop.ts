@@ -7,6 +7,7 @@ import {
     cancelAnimation,
     runOnJS,
     Easing,
+    useReducedMotion,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -40,6 +41,9 @@ function bestKey(mode: GameMode) {
 
 export function useGameLoop(topPad: number, botPad: number) {
     const { soundEnabled, vibrationEnabled } = useSettings();
+    const reducedMotion = useReducedMotion();
+    const reducedMotionRef = useRef(reducedMotion);
+    useEffect(() => { reducedMotionRef.current = reducedMotion; }, [reducedMotion]);
 
     const [score, setScore] = useState(0);
     const [bestScore, setBestScore] = useState(0);
@@ -189,6 +193,7 @@ export function useGameLoop(topPad: number, botPad: number) {
     }, [saveBest, haptic, playSound, clearTimer]);
 
     const triggerShake = useCallback(() => {
+        if (reducedMotionRef.current) return;
         shakeAnim.value = withSequence(
             withTiming(9, { duration: 35 }),
             withTiming(-9, { duration: 35 }),
@@ -265,11 +270,17 @@ export function useGameLoop(topPad: number, botPad: number) {
         haptic("warning");
         triggerShake();
 
+        const missFlash = () => {
+            if (!reducedMotionRef.current) {
+                flashOpacity.value = withSequence(
+                    withTiming(0.2, { duration: 50 }),
+                    withTiming(0, { duration: 250 })
+                );
+            }
+        };
+
         if (mode.lives === 0) {
-            flashOpacity.value = withSequence(
-                withTiming(0.2, { duration: 50 }),
-                withTiming(0, { duration: 250 })
-            );
+            missFlash();
             durRef.current = Math.max(mode.minDur, durRef.current + 20);
             spawnRing(durRef.current);
             return;
@@ -281,10 +292,7 @@ export function useGameLoop(topPad: number, botPad: number) {
         if (livesRef.current <= 0) {
             doGameOver();
         } else {
-            flashOpacity.value = withSequence(
-                withTiming(0.2, { duration: 50 }),
-                withTiming(0, { duration: 250 })
-            );
+            missFlash();
             durRef.current = Math.max(mode.minDur, durRef.current + 20);
             spawnRing(durRef.current);
         }
@@ -325,11 +333,13 @@ export function useGameLoop(topPad: number, botPad: number) {
         else haptic("light");
         playSound("success");
 
-        const flashIntensity = quality === "perfect" ? 0.5 : quality === "good" ? 0.3 : 0.15;
-        flashOpacity.value = withSequence(
-            withTiming(flashIntensity, { duration: 50 }),
-            withTiming(0, { duration: 200 })
-        );
+        const flashIntensity = reducedMotionRef.current ? 0 : (quality === "perfect" ? 0.5 : quality === "good" ? 0.3 : 0.15);
+        if (flashIntensity > 0) {
+            flashOpacity.value = withSequence(
+                withTiming(flashIntensity, { duration: 50 }),
+                withTiming(0, { duration: 200 })
+            );
+        }
         targetScale.value = withSequence(
             withTiming(quality === "perfect" ? 1.6 : 1.3, { duration: 65 }),
             withTiming(1, { duration: 210, easing: Easing.out(Easing.quad) })
@@ -483,7 +493,7 @@ export function useGameLoop(topPad: number, botPad: number) {
         combo, maxCombo, hitQuality, lives, visualPhase,
         gameMode, timeLeft, newAchievements,
         perfectTrigger, perfectPos, isNewRecord,
-        isDualMode,
+        isDualMode, reducedMotion,
         ringRadius, flashOpacity, targetScale, targetColor, anchorX, anchorY,
         ringRadius2, anchorX2, anchorY2, targetScale2, targetColor2,
         shakeAnim,
