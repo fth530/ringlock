@@ -14,6 +14,8 @@ const MODES: { key: GameMode; label: string; color: string; icon: string }[] = [
     { key: "hardcore", label: "HARDCORE", color: C.pink, icon: "◆" },
     { key: "zen", label: "ZEN", color: C.purple, icon: "○" },
     { key: "speed", label: "SPEED RUSH", color: C.gold, icon: "◈" },
+    { key: "mirror", label: "AYNA", color: "#00BFFF", icon: "⟲" },
+    { key: "dual", label: "İKİZ", color: "#FF8C00", icon: "⊕" },
 ];
 
 function bestKey(mode: GameMode) {
@@ -38,7 +40,7 @@ async function loadStats(): Promise<Stats> {
             }))
         )
     );
-    const scores = { classic: 0, hardcore: 0, zen: 0, speed: 0 } as Record<GameMode, number>;
+    const scores = { classic: 0, hardcore: 0, zen: 0, speed: 0, mirror: 0, dual: 0 } as Record<GameMode, number>;
     for (const r of modeScores) scores[r.key] = r.score;
 
     const [games, score, combo, streak, daily] = await Promise.all([

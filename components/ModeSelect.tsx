@@ -1,16 +1,24 @@
-import React from "react";
-import { View, Text, Pressable, StyleSheet, Platform } from "react-native";
-import Animated, { useSharedValue, useAnimatedStyle, withTiming } from "react-native-reanimated";
+import React, { useEffect, useState } from "react";
+import { View, Text, Pressable, StyleSheet, ScrollView } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { C, GameMode, GAME_MODES } from "@/constants/game";
 
-const MODE_ORDER: GameMode[] = ["classic", "hardcore", "zen", "speed"];
+const MODE_ORDER: GameMode[] = ["classic", "hardcore", "zen", "speed", "mirror", "dual"];
 
 const MODE_COLORS: Record<GameMode, string> = {
     classic: C.cyan,
     hardcore: C.pink,
     zen: C.purple,
     speed: C.gold,
+    mirror: "#00BFFF",
+    dual: "#FF8C00",
 };
+
+async function loadBestAnyMode(): Promise<number> {
+    const keys = ["ringlock_best", "ringlock_best_hardcore", "ringlock_best_zen", "ringlock_best_speed"];
+    const vals = await Promise.all(keys.map((k) => AsyncStorage.getItem(k)));
+    return Math.max(0, ...vals.map((v) => (v ? parseInt(v, 10) : 0)));
+}
 
 export function ModeSelect({
     onSelect,
@@ -19,41 +27,73 @@ export function ModeSelect({
     onSelect: (mode: GameMode) => void;
     onBack: () => void;
 }) {
+    const [bestAny, setBestAny] = useState<number | null>(null);
+
+    useEffect(() => {
+        loadBestAnyMode().then(setBestAny);
+    }, []);
+
+    const isUnlocked = (key: GameMode): boolean => {
+        const cfg = GAME_MODES[key];
+        if (!cfg.unlockScore) return true;
+        if (bestAny === null) return false;
+        return bestAny >= cfg.unlockScore;
+    };
+
     return (
         <View style={[StyleSheet.absoluteFill, s.wrap]}>
-            <Text style={s.title}>MOD SEC</Text>
+            <Text style={s.title}>MOD SEÇ</Text>
             <View style={s.separator} />
 
-            <View style={s.modesContainer}>
+            <ScrollView
+                style={s.scroll}
+                contentContainerStyle={s.modesContainer}
+                showsVerticalScrollIndicator={false}
+            >
                 {MODE_ORDER.map((key) => {
                     const mode = GAME_MODES[key];
                     const color = MODE_COLORS[key];
+                    const unlocked = isUnlocked(key);
+
                     return (
                         <Pressable
                             key={key}
                             accessibilityRole="button"
-                            accessibilityLabel={`Play ${mode.label}`}
-                            onPress={() => onSelect(key)}
+                            accessibilityLabel={unlocked ? `Play ${mode.label}` : `${mode.label} locked`}
+                            onPress={() => { if (unlocked) onSelect(key); }}
                             style={({ pressed }) => [
                                 s.modeBtn,
-                                { borderColor: color },
-                                pressed && s.modeBtnPressed,
+                                {
+                                    borderColor: unlocked ? color : "rgba(255,255,255,0.12)",
+                                    opacity: unlocked ? (pressed ? 0.65 : 1) : 0.5,
+                                },
                             ]}
                         >
-                            <Text style={[s.modeLabel, { color }]}>{mode.label}</Text>
-                            <Text style={[s.modeDesc, { color: `${color}88` }]}>{mode.description}</Text>
+                            <View style={s.modeHeader}>
+                                <Text style={[s.modeLabel, { color: unlocked ? color : "rgba(255,255,255,0.3)" }]}>
+                                    {mode.label}
+                                </Text>
+                                {!unlocked && (
+                                    <Text style={s.lockIcon}>🔒</Text>
+                                )}
+                            </View>
+                            <Text style={[s.modeDesc, { color: unlocked ? `${color}99` : "rgba(255,255,255,0.2)" }]}>
+                                {unlocked
+                                    ? mode.description
+                                    : `${mode.unlockScore}+ puan ile açılır`}
+                            </Text>
                         </Pressable>
                     );
                 })}
-            </View>
+            </ScrollView>
 
             <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Back to Menu"
                 onPress={onBack}
-                style={({ pressed }) => [s.backBtn, pressed && s.modeBtnPressed]}
+                style={({ pressed }) => [s.backBtn, pressed && { opacity: 0.5 }]}
             >
-                <Text style={s.backText}>GERI</Text>
+                <Text style={s.backText}>GERİ</Text>
             </Pressable>
         </View>
     );
@@ -71,41 +111,55 @@ const s = StyleSheet.create({
         letterSpacing: 6,
         color: C.cyan,
         marginBottom: 16,
+        marginTop: 20,
     },
     separator: {
         width: 80,
         height: 1,
         backgroundColor: "rgba(0,255,232,0.22)",
-        marginBottom: 28,
+        marginBottom: 20,
+    },
+    scroll: {
+        width: "100%",
+        flexGrow: 0,
     },
     modesContainer: {
-        gap: 14,
+        gap: 12,
         width: "80%",
         maxWidth: 300,
+        alignSelf: "center",
+        paddingBottom: 8,
     },
     modeBtn: {
         borderWidth: 1.5,
         borderRadius: 4,
-        paddingVertical: 16,
+        paddingVertical: 14,
         paddingHorizontal: 20,
         alignItems: "center",
     },
-    modeBtnPressed: {
-        opacity: 0.65,
+    modeHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+        marginBottom: 4,
     },
     modeLabel: {
         fontFamily: "Orbitron_700Bold",
-        fontSize: 16,
+        fontSize: 15,
         letterSpacing: 4,
-        marginBottom: 4,
+    },
+    lockIcon: {
+        fontSize: 13,
     },
     modeDesc: {
         fontFamily: "Orbitron_400Regular",
-        fontSize: 10,
-        letterSpacing: 2,
+        fontSize: 9,
+        letterSpacing: 1.5,
+        textAlign: "center",
     },
     backBtn: {
-        marginTop: 28,
+        marginTop: 20,
+        marginBottom: 24,
         paddingVertical: 10,
         paddingHorizontal: 30,
     },

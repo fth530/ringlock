@@ -84,6 +84,15 @@ patches/                      # patch-package patches for expo-asset
 - Screen shake animation on miss
 - Animated gold "YENİ REKOR" badge in GameOverOverlay
 
+### Phase 5 — New Game Modes
+- Mirror Mode ("AYNA"): ring grows 0→MAX_R instead of shrinking; miss when it overshoots; unlocks at 10+ best score
+- Dual Mode ("İKİZ"): 2 rings simultaneously at different positions/speeds (ring2 = 80% speed); tap evaluates both; both-hit grants +2 score; unlocks at 25+ best score
+- ModeSelect rewritten: ScrollView layout, AsyncStorage unlock check, locked modes show 🔒 + unlock hint
+- ScoresOverlay updated: AYNA + İKİZ rows added to per-mode best scores section
+- GameMode type extended: mirror | dual; GAME_MODES record extended with isMirror/isDual/unlockScore flags
+- useGameLoop: ringRadius2/anchorX2/anchorY2/targetScale2/targetColor2 shared values; dualMissedRef prevents double auto-miss; handleDualAutoMiss; handleScreenTap dual branch; spawnRing handles both mirror+dual
+- app/index.tsx: second RingsAnchor rendered when isDualMode; new shared values destructured
+
 ### Phase 4 — Stats & Accessibility
 - ScoresOverlay rewritten: mode best scores + 6-card lifetime stat grid (games, total score, avg score, best combo, streak, daily challenges)
 - All-time best combo tracking (ringlock_best_combo)

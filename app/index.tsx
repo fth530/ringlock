@@ -159,7 +159,9 @@ export default function GameScreen() {
     combo, maxCombo, hitQuality, lives, visualPhase,
     gameMode, timeLeft, newAchievements,
     perfectTrigger, perfectPos, isNewRecord,
+    isDualMode,
     ringRadius, flashOpacity, targetScale, targetColor, anchorX, anchorY,
+    ringRadius2, anchorX2, anchorY2, targetScale2, targetColor2,
     shakeAnim,
     beginGame, handleRestart, handleMenu, handleScreenTap,
   } = useGameLoop(topPad, botPad);
@@ -269,7 +271,7 @@ export default function GameScreen() {
       {/* Hit quality */}
       {phase === "playing" && <HitQualityLabel quality={hitQuality} />}
 
-      {/* Rings */}
+      {/* Primary ring */}
       {showRings && (
         <RingsAnchor
           anchorX={anchorX}
@@ -277,6 +279,19 @@ export default function GameScreen() {
           ringRadius={ringRadius}
           targetScale={targetScale}
           targetColor={targetColor}
+          ringColor={activeRing.color}
+          thick={highContrast}
+        />
+      )}
+
+      {/* Secondary ring (dual mode only) */}
+      {showRings && isDualMode && (
+        <RingsAnchor
+          anchorX={anchorX2}
+          anchorY={anchorY2}
+          ringRadius={ringRadius2}
+          targetScale={targetScale2}
+          targetColor={targetColor2}
           ringColor={activeRing.color}
           thick={highContrast}
         />

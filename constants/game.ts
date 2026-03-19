@@ -50,7 +50,7 @@ export type Phase = "menu" | "playing" | "gameover";
 export type HitQuality = "perfect" | "good" | "late" | null;
 
 // ─── Game Modes ──────────────────────────────────────────────────────────────
-export type GameMode = "classic" | "hardcore" | "zen" | "speed";
+export type GameMode = "classic" | "hardcore" | "zen" | "speed" | "mirror" | "dual";
 
 export interface GameModeConfig {
   key: GameMode;
@@ -61,6 +61,9 @@ export interface GameModeConfig {
   initialDur: number;
   minDur: number;
   durStep: number;
+  isMirror?: boolean;   // ring grows instead of shrinks
+  isDual?: boolean;     // two rings simultaneously
+  unlockScore?: number; // any-mode best score needed to unlock
 }
 
 export const GAME_MODES: Record<GameMode, GameModeConfig> = {
@@ -103,5 +106,29 @@ export const GAME_MODES: Record<GameMode, GameModeConfig> = {
     initialDur: 1200,
     minDur: MIN_DUR,
     durStep: DUR_STEP + 10,
+  },
+  mirror: {
+    key: "mirror",
+    label: "AYNA",
+    description: "Halka büyüyor — ters mekanik",
+    lives: MAX_LIVES,
+    timeLimitSec: 0,
+    initialDur: INITIAL_DUR + 300,
+    minDur: MIN_DUR + 60,
+    durStep: DUR_STEP - 8,
+    isMirror: true,
+    unlockScore: 10,
+  },
+  dual: {
+    key: "dual",
+    label: "İKİZ",
+    description: "2 halka, tek dokunuş",
+    lives: MAX_LIVES,
+    timeLimitSec: 0,
+    initialDur: INITIAL_DUR,
+    minDur: MIN_DUR,
+    durStep: DUR_STEP,
+    isDual: true,
+    unlockScore: 25,
   },
 };

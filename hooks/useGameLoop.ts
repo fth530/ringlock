@@ -56,6 +56,7 @@ export function useGameLoop(topPad: number, botPad: number) {
     const [perfectTrigger, setPerfectTrigger] = useState(0);
     const [perfectPos, setPerfectPos] = useState<{ x: number; y: number }>({ x: SCREEN_W / 2, y: SCREEN_H / 2 });
     const [isNewRecord, setIsNewRecord] = useState(false);
+    const [isDualMode, setIsDualMode] = useState(false);
 
     const phaseRef = useRef<Phase>("menu");
     const perfectCountRef = useRef(0);
@@ -70,12 +71,14 @@ export function useGameLoop(topPad: number, botPad: number) {
     const modeRef = useRef<GameMode>("classic");
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const timeLeftRef = useRef(0);
+    const dualMissedRef = useRef(false);
 
     const soundRef = useRef(soundEnabled);
     const vibrationRef = useRef(vibrationEnabled);
     useEffect(() => { soundRef.current = soundEnabled; }, [soundEnabled]);
     useEffect(() => { vibrationRef.current = vibrationEnabled; }, [vibrationEnabled]);
 
+    // Primary ring
     const ringRadius = useSharedValue(0);
     const flashOpacity = useSharedValue(0);
     const targetScale = useSharedValue(1);
@@ -83,6 +86,13 @@ export function useGameLoop(topPad: number, botPad: number) {
     const anchorX = useSharedValue(SCREEN_W / 2);
     const anchorY = useSharedValue(SCREEN_H / 2);
     const shakeAnim = useSharedValue(0);
+
+    // Secondary ring (dual mode)
+    const ringRadius2 = useSharedValue(0);
+    const anchorX2 = useSharedValue(SCREEN_W / 2 + 60);
+    const anchorY2 = useSharedValue(SCREEN_H / 2 + 60);
+    const targetScale2 = useSharedValue(1);
+    const targetColor2 = useSharedValue(0);
 
     useEffect(() => {
         AsyncStorage.getItem(bestKey(gameMode)).then((v: string | null) => {
@@ -190,29 +200,70 @@ export function useGameLoop(topPad: number, botPad: number) {
     }, [shakeAnim]);
 
     const spawnRing = useCallback((dur: number) => {
+        const mode = GAME_MODES[modeRef.current];
         const pos = randomTargetPos(topPad, botPad);
         anchorX.value = pos.x;
         anchorY.value = pos.y;
-        ringRadius.value = MAX_R;
-        ringRadius.value = withTiming(
-            0,
-            { duration: dur, easing: Easing.linear },
-            (done) => {
-                if (done) runOnJS(handleMiss)();
-            }
-        );
-    }, [ringRadius, anchorX, anchorY, topPad, botPad]);
+
+        if (mode.isMirror) {
+            // Ring grows from 0 → MAX_R; miss when it overshoots (animation completes)
+            ringRadius.value = 0;
+            ringRadius.value = withTiming(
+                MAX_R,
+                { duration: dur, easing: Easing.linear },
+                (done) => { if (done) runOnJS(handleMiss)(); }
+            );
+        } else {
+            // Classic: ring shrinks from MAX_R → 0
+            ringRadius.value = MAX_R;
+            ringRadius.value = withTiming(
+                0,
+                { duration: dur, easing: Easing.linear },
+                (done) => { if (done) runOnJS(handleMiss)(); }
+            );
+        }
+
+        if (mode.isDual) {
+            dualMissedRef.current = false;
+            const pos2 = randomTargetPos(topPad, botPad);
+            anchorX2.value = pos2.x;
+            anchorY2.value = pos2.y;
+            // Second ring is 20% faster for extra challenge
+            const dur2 = Math.max(mode.minDur, Math.round(dur * 0.8));
+            ringRadius2.value = MAX_R;
+            ringRadius2.value = withTiming(
+                0,
+                { duration: dur2, easing: Easing.linear },
+                (done) => { if (done) runOnJS(handleDualAutoMiss)(); }
+            );
+        }
+    }, [ringRadius, ringRadius2, anchorX, anchorY, anchorX2, anchorY2, topPad, botPad]);
+
+    const handleDualAutoMiss = useCallback(() => {
+        if (phaseRef.current !== "playing") return;
+        if (dualMissedRef.current) return;
+        dualMissedRef.current = true;
+        cancelAnimation(ringRadius);
+        handleMiss();
+    }, [ringRadius]);
 
     const handleMiss = useCallback(() => {
         if (phaseRef.current !== "playing") return;
+
+        const mode = GAME_MODES[modeRef.current];
+
+        // In dual mode, primary auto-miss: cancel secondary ring too
+        if (mode.isDual && !dualMissedRef.current) {
+            dualMissedRef.current = true;
+            cancelAnimation(ringRadius2);
+        }
+
         comboRef.current = 0;
         missCountRef.current += 1;
         setCombo(0);
         setHitQuality(null);
         haptic("warning");
         triggerShake();
-
-        const mode = GAME_MODES[modeRef.current];
 
         if (mode.lives === 0) {
             flashOpacity.value = withSequence(
@@ -237,10 +288,10 @@ export function useGameLoop(topPad: number, botPad: number) {
             durRef.current = Math.max(mode.minDur, durRef.current + 20);
             spawnRing(durRef.current);
         }
-    }, [doGameOver, flashOpacity, haptic, spawnRing, triggerShake]);
+    }, [doGameOver, flashOpacity, haptic, spawnRing, triggerShake, ringRadius2]);
 
-    const doHit = useCallback((quality: HitQuality) => {
-        scoreRef.current += 1;
+    const doHit = useCallback((quality: HitQuality, bonusPoint = false) => {
+        scoreRef.current += bonusPoint ? 2 : 1;
         setScore(scoreRef.current);
         comboRef.current += 1;
         setCombo(comboRef.current);
@@ -287,15 +338,24 @@ export function useGameLoop(topPad: number, botPad: number) {
             withTiming(1, { duration: 55 }),
             withTiming(0, { duration: 310 })
         );
+        targetScale2.value = withSequence(
+            withTiming(quality === "perfect" ? 1.6 : 1.3, { duration: 65 }),
+            withTiming(1, { duration: 210, easing: Easing.out(Easing.quad) })
+        );
+        targetColor2.value = withSequence(
+            withTiming(1, { duration: 55 }),
+            withTiming(0, { duration: 310 })
+        );
 
         durRef.current = Math.max(mode.minDur, durRef.current - mode.durStep);
         spawnRing(durRef.current);
-    }, [spawnRing, flashOpacity, targetScale, targetColor, updateVisualPhase, haptic, playSound, anchorX, anchorY]);
+    }, [spawnRing, flashOpacity, targetScale, targetColor, targetScale2, targetColor2, updateVisualPhase, haptic, playSound, anchorX, anchorY]);
 
     const beginGame = useCallback((mode: GameMode = "classic") => {
         const config = GAME_MODES[mode];
         modeRef.current = mode;
         setGameMode(mode);
+        setIsDualMode(!!config.isDual);
         scoreRef.current = 0;
         durRef.current = config.initialDur;
         phaseRef.current = "playing";
@@ -306,6 +366,7 @@ export function useGameLoop(topPad: number, botPad: number) {
         goodCountRef.current = 0;
         lateCountRef.current = 0;
         missCountRef.current = 0;
+        dualMissedRef.current = false;
         setScore(0);
         setCombo(0);
         setMaxCombo(0);
@@ -336,19 +397,70 @@ export function useGameLoop(topPad: number, botPad: number) {
 
     const handleRestart = useCallback(() => {
         cancelAnimation(ringRadius);
+        cancelAnimation(ringRadius2);
         beginGame(modeRef.current);
-    }, [ringRadius, beginGame]);
+    }, [ringRadius, ringRadius2, beginGame]);
 
     const handleMenu = useCallback(() => {
         cancelAnimation(ringRadius);
+        cancelAnimation(ringRadius2);
         clearTimer();
         ringRadius.value = 0;
+        ringRadius2.value = 0;
         phaseRef.current = "menu";
         setPhase("menu");
-    }, [ringRadius, clearTimer]);
+    }, [ringRadius, ringRadius2, clearTimer]);
 
     const handleScreenTap = useCallback(() => {
         if (phaseRef.current !== "playing") return;
+
+        const mode = GAME_MODES[modeRef.current];
+
+        if (mode.isDual) {
+            // Evaluate both rings — cancelAnimation prevents worklet callbacks from firing
+            const r1 = ringRadius.value;
+            const r2 = ringRadius2.value;
+            cancelAnimation(ringRadius);
+            cancelAnimation(ringRadius2);
+            dualMissedRef.current = true; // suppress any pending auto-miss
+
+            const diff1 = Math.abs(r1 - TARGET_R);
+            const diff2 = Math.abs(r2 - TARGET_R);
+            const hit1 = diff1 <= TOLERANCE;
+            const hit2 = diff2 <= TOLERANCE;
+
+            if (hit1 || hit2) {
+                const bestDiff = (hit1 && hit2) ? Math.min(diff1, diff2) : hit1 ? diff1 : diff2;
+                let quality: HitQuality;
+                if (bestDiff <= PERFECT_THRESHOLD) quality = "perfect";
+                else if (bestDiff <= GOOD_THRESHOLD) quality = "good";
+                else quality = "late";
+                doHit(quality, hit1 && hit2);
+            } else {
+                // Manual miss (bypass dualMissedRef since we already set it)
+                comboRef.current = 0;
+                missCountRef.current += 1;
+                setCombo(0);
+                setHitQuality(null);
+                haptic("warning");
+                triggerShake();
+                livesRef.current -= 1;
+                setLives(livesRef.current);
+                if (livesRef.current <= 0) {
+                    doGameOver();
+                } else {
+                    flashOpacity.value = withSequence(
+                        withTiming(0.2, { duration: 50 }),
+                        withTiming(0, { duration: 250 })
+                    );
+                    durRef.current = Math.max(mode.minDur, durRef.current + 20);
+                    spawnRing(durRef.current);
+                }
+            }
+            return;
+        }
+
+        // Single ring (classic / mirror / hardcore / zen / speed)
         const r = ringRadius.value;
         const diff = Math.abs(r - TARGET_R);
         cancelAnimation(ringRadius);
@@ -362,7 +474,7 @@ export function useGameLoop(topPad: number, botPad: number) {
         } else {
             handleMiss();
         }
-    }, [ringRadius, doHit, handleMiss]);
+    }, [ringRadius, ringRadius2, doHit, handleMiss, haptic, triggerShake, doGameOver, spawnRing, flashOpacity]);
 
     useEffect(() => clearTimer, [clearTimer]);
 
@@ -371,7 +483,9 @@ export function useGameLoop(topPad: number, botPad: number) {
         combo, maxCombo, hitQuality, lives, visualPhase,
         gameMode, timeLeft, newAchievements,
         perfectTrigger, perfectPos, isNewRecord,
+        isDualMode,
         ringRadius, flashOpacity, targetScale, targetColor, anchorX, anchorY,
+        ringRadius2, anchorX2, anchorY2, targetScale2, targetColor2,
         shakeAnim,
         beginGame, handleRestart, handleMenu, handleScreenTap,
     };
