@@ -144,6 +144,13 @@ export function useGameLoop(topPad: number, botPad: number) {
 
         recordPlayToday();
 
+        AsyncStorage.getItem("ringlock_best_combo").then((v) => {
+            const prev = v ? parseInt(v, 10) : 0;
+            if (maxComboRef.current > prev) {
+                AsyncStorage.setItem("ringlock_best_combo", String(maxComboRef.current));
+            }
+        });
+
         const dailyChallenge = generateDailyChallenge();
         checkAndCompleteDailyChallenge(dailyChallenge, {
             score: s,

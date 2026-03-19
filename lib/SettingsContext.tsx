@@ -1,11 +1,18 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-interface SettingsState {
+interface Settings {
     soundEnabled: boolean;
     vibrationEnabled: boolean;
+    largeText: boolean;
+    highContrast: boolean;
+}
+
+interface SettingsState extends Settings {
     toggleSound: () => void;
     toggleVibration: () => void;
+    toggleLargeText: () => void;
+    toggleHighContrast: () => void;
     resetAllData: () => Promise<void>;
 }
 
@@ -25,61 +32,75 @@ const ALL_KEYS = [
     "ringlock_streak",
     "ringlock_last_play_date",
     "ringlock_last_review_date",
+    "ringlock_best_combo",
+    "ringlock_daily_completed_count",
 ];
 
-const SettingsContext = createContext<SettingsState>({
+const DEFAULT: Settings = {
     soundEnabled: true,
     vibrationEnabled: true,
+    largeText: false,
+    highContrast: false,
+};
+
+const SettingsContext = createContext<SettingsState>({
+    ...DEFAULT,
     toggleSound: () => { },
     toggleVibration: () => { },
+    toggleLargeText: () => { },
+    toggleHighContrast: () => { },
     resetAllData: async () => { },
 });
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
-    const [soundEnabled, setSoundEnabled] = useState(true);
-    const [vibrationEnabled, setVibrationEnabled] = useState(true);
+    const [settings, setSettings] = useState<Settings>(DEFAULT);
+    const settingsRef = useRef<Settings>(DEFAULT);
 
     useEffect(() => {
         AsyncStorage.getItem(STORAGE_KEY).then((raw) => {
             if (raw) {
                 try {
                     const parsed = JSON.parse(raw);
-                    if (typeof parsed.soundEnabled === "boolean") setSoundEnabled(parsed.soundEnabled);
-                    if (typeof parsed.vibrationEnabled === "boolean") setVibrationEnabled(parsed.vibrationEnabled);
-                } catch {
-                }
+                    const loaded: Settings = {
+                        soundEnabled: typeof parsed.soundEnabled === "boolean" ? parsed.soundEnabled : true,
+                        vibrationEnabled: typeof parsed.vibrationEnabled === "boolean" ? parsed.vibrationEnabled : true,
+                        largeText: typeof parsed.largeText === "boolean" ? parsed.largeText : false,
+                        highContrast: typeof parsed.highContrast === "boolean" ? parsed.highContrast : false,
+                    };
+                    settingsRef.current = loaded;
+                    setSettings(loaded);
+                } catch { }
             }
         });
     }, []);
 
-    const persist = useCallback((sound: boolean, vibration: boolean) => {
-        AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ soundEnabled: sound, vibrationEnabled: vibration }));
+    const update = useCallback((patch: Partial<Settings>) => {
+        const next = { ...settingsRef.current, ...patch };
+        settingsRef.current = next;
+        setSettings(next);
+        AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     }, []);
 
-    const toggleSound = useCallback(() => {
-        setSoundEnabled((prev) => {
-            const next = !prev;
-            persist(next, vibrationEnabled);
-            return next;
-        });
-    }, [vibrationEnabled, persist]);
-
-    const toggleVibration = useCallback(() => {
-        setVibrationEnabled((prev) => {
-            const next = !prev;
-            persist(soundEnabled, next);
-            return next;
-        });
-    }, [soundEnabled, persist]);
+    const toggleSound = useCallback(() => update({ soundEnabled: !settingsRef.current.soundEnabled }), [update]);
+    const toggleVibration = useCallback(() => update({ vibrationEnabled: !settingsRef.current.vibrationEnabled }), [update]);
+    const toggleLargeText = useCallback(() => update({ largeText: !settingsRef.current.largeText }), [update]);
+    const toggleHighContrast = useCallback(() => update({ highContrast: !settingsRef.current.highContrast }), [update]);
 
     const resetAllData = useCallback(async () => {
         await AsyncStorage.multiRemove(ALL_KEYS);
-        setSoundEnabled(true);
-        setVibrationEnabled(true);
+        settingsRef.current = DEFAULT;
+        setSettings(DEFAULT);
     }, []);
 
     return (
-        <SettingsContext.Provider value={{ soundEnabled, vibrationEnabled, toggleSound, toggleVibration, resetAllData }}>
+        <SettingsContext.Provider value={{
+            ...settings,
+            toggleSound,
+            toggleVibration,
+            toggleLargeText,
+            toggleHighContrast,
+            resetAllData,
+        }}>
             {children}
         </SettingsContext.Provider>
     );

@@ -84,6 +84,15 @@ patches/                      # patch-package patches for expo-asset
 - Screen shake animation on miss
 - Animated gold "YENİ REKOR" badge in GameOverOverlay
 
+### Phase 4 — Stats & Accessibility
+- ScoresOverlay rewritten: mode best scores + 6-card lifetime stat grid (games, total score, avg score, best combo, streak, daily challenges)
+- All-time best combo tracking (ringlock_best_combo)
+- Daily challenge completion counter (ringlock_daily_completed_count)
+- SettingsContext extended with largeText + highContrast booleans
+- SettingsOverlay: new "ERİŞİLEBİLİRLİK" section with 2 toggles + sublabels, scrollable layout
+- largeText: score 44→58px, hit label 28→40px, combo 32→42px
+- highContrast: score text turns white, hit label full opacity, shrinking ring border 2.5→4px
+
 ### Phase 3 — Engagement Systems
 - 6 ring color themes + 5 background themes with unlock conditions
 - ThemeOverlay with lock/unlock preview grid

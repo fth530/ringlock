@@ -27,11 +27,13 @@ import { TutorialOverlay, shouldShowTutorial } from "@/components/TutorialOverla
 import { ThemeOverlay } from "@/components/ThemeOverlay";
 import { DailyChallengeOverlay } from "@/components/DailyChallengeOverlay";
 import { useTheme } from "@/lib/ThemeContext";
+import { useSettings } from "@/lib/SettingsContext";
 
 // ─── Hit Quality Label ────────────────────────────────────────────────────────
 function HitQualityLabel({ quality }: { quality: HitQuality }) {
   const opacity = useSharedValue(0);
   const scale = useSharedValue(0.5);
+  const { largeText, highContrast } = useSettings();
 
   useEffect(() => {
     if (quality) {
@@ -54,13 +56,14 @@ function HitQualityLabel({ quality }: { quality: HitQuality }) {
   if (!quality) return null;
 
   const label =
-    quality === "perfect" ? "MUKEMMEL" : quality === "good" ? "IYI" : "GEC";
+    quality === "perfect" ? "MÜKEMMEL" : quality === "good" ? "İYİ" : "GEÇ";
   const color =
     quality === "perfect" ? C.gold : quality === "good" ? C.cyan : C.pink;
+  const fontSize = largeText ? 40 : 28;
 
   return (
     <Animated.View style={[s.hitQualityWrap, animStyle]} pointerEvents="none">
-      <Text style={[s.hitQualityText, { color }]}>{label}</Text>
+      <Text style={[s.hitQualityText, { color, fontSize, opacity: highContrast ? 1 : 0.92 }]}>{label}</Text>
     </Animated.View>
   );
 }
@@ -68,6 +71,7 @@ function HitQualityLabel({ quality }: { quality: HitQuality }) {
 // ─── Combo Counter ────────────────────────────────────────────────────────────
 function ComboCounter({ combo }: { combo: number }) {
   const scale = useSharedValue(1);
+  const { largeText } = useSettings();
 
   useEffect(() => {
     if (combo > 1) {
@@ -85,11 +89,12 @@ function ComboCounter({ combo }: { combo: number }) {
   if (combo < 2) return null;
   const comboColor = combo >= 10 ? C.gold : combo >= 5 ? C.pink : C.cyan;
   const comboLabel =
-    combo >= 10 ? "INANILMAZ" : combo >= 5 ? "HARIKA" : combo >= 3 ? "IYI" : "";
+    combo >= 10 ? "İNANILMAZ" : combo >= 5 ? "HARİKA" : combo >= 3 ? "İYİ" : "";
+  const fontSize = largeText ? 42 : 32;
 
   return (
     <Animated.View style={[s.comboWrap, animStyle]} pointerEvents="none">
-      <Text style={[s.comboCount, { color: comboColor }]}>{combo}x</Text>
+      <Text style={[s.comboCount, { color: comboColor, fontSize }]}>{combo}x</Text>
       {comboLabel !== "" && (
         <Text style={[s.comboLabel, { color: comboColor }]}>{comboLabel}</Text>
       )}
@@ -140,6 +145,7 @@ export default function GameScreen() {
   const topPad = Platform.OS === "web" ? Math.max(insets.top, 67) : insets.top;
   const botPad = Platform.OS === "web" ? Math.max(insets.bottom, 34) : insets.bottom;
   const { activeRing, activeBg } = useTheme();
+  const { largeText, highContrast } = useSettings();
   const [showSettings, setShowSettings] = useState(false);
   const [showModeSelect, setShowModeSelect] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
@@ -246,11 +252,11 @@ export default function GameScreen() {
         >
           <View style={s.scoreBox}>
             <Text style={s.scoreLabel}>SKOR</Text>
-            <Text style={s.scoreValue}>{score}</Text>
+            <Text style={[s.scoreValue, largeText && { fontSize: 58, lineHeight: 64 }, highContrast && { color: "#FFFFFF" }]}>{score}</Text>
             {bestScore > 0 && (
               <>
                 <View style={s.scoreDivider} />
-                <Text style={s.bestInline}>EN IYI  {bestScore}</Text>
+                <Text style={[s.bestInline, highContrast && { color: "rgba(255,255,255,0.6)" }]}>EN İYİ  {bestScore}</Text>
               </>
             )}
           </View>
@@ -272,6 +278,7 @@ export default function GameScreen() {
           targetScale={targetScale}
           targetColor={targetColor}
           ringColor={activeRing.color}
+          thick={highContrast}
         />
       )}
 

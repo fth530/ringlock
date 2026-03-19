@@ -89,7 +89,7 @@ export function TargetRing({
 // ─── Shrinking Ring ─────────────────────────────────────────────────────────
 const FIXED_R = 150;
 
-export function ShrinkingRing({ radius, color = C.pink }: { radius: SharedValue<number>; color?: string }) {
+export function ShrinkingRing({ radius, color = C.pink, thick = false }: { radius: SharedValue<number>; color?: string; thick?: boolean }) {
     const ringStyle = useAnimatedStyle(() => {
         const scaleFactor = radius.value / FIXED_R;
         return {
@@ -106,8 +106,8 @@ export function ShrinkingRing({ radius, color = C.pink }: { radius: SharedValue<
         <Animated.View
             style={[
                 styles.shrinkRingFixed,
-                { borderColor: color },
-                Platform.OS === "ios" ? { shadowColor: color } : {},
+                { borderColor: color, borderWidth: thick ? 4 : 2.5 },
+                Platform.OS === "ios" ? { shadowColor: color, shadowOpacity: thick ? 1 : 1, shadowRadius: thick ? 20 : 14 } : {},
                 ringStyle,
             ]}
         />
@@ -121,6 +121,7 @@ export function RingsAnchor({
     targetScale,
     targetColor,
     ringColor,
+    thick,
 }: {
     anchorX: SharedValue<number>;
     anchorY: SharedValue<number>;
@@ -128,6 +129,7 @@ export function RingsAnchor({
     targetScale: SharedValue<number>;
     targetColor: SharedValue<number>;
     ringColor?: string;
+    thick?: boolean;
 }) {
     const anchorStyle = useAnimatedStyle(() => ({
         left: anchorX.value,
@@ -140,7 +142,7 @@ export function RingsAnchor({
             pointerEvents="none"
         >
             <TargetRing scale={targetScale} colorProgress={targetColor} />
-            <ShrinkingRing radius={ringRadius} color={ringColor} />
+            <ShrinkingRing radius={ringRadius} color={ringColor} thick={thick} />
         </Animated.View>
     );
 }

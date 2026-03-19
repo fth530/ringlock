@@ -1,13 +1,58 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, Pressable, Alert } from "react-native";
+import { View, Text, StyleSheet, Pressable, Alert, ScrollView } from "react-native";
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from "react-native-reanimated";
 import Constants from "expo-constants";
 import { C } from "@/constants/game";
 import { useSettings } from "@/lib/SettingsContext";
 
+function ToggleRow({
+    label,
+    sublabel,
+    enabled,
+    onToggle,
+    accessLabel,
+}: {
+    label: string;
+    sublabel?: string;
+    enabled: boolean;
+    onToggle: () => void;
+    accessLabel: string;
+}) {
+    return (
+        <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={accessLabel}
+            style={s.row}
+            onPress={onToggle}
+        >
+            <View style={s.rowLeft}>
+                <Text style={s.label}>{label}</Text>
+                {sublabel ? <Text style={s.sublabel}>{sublabel}</Text> : null}
+            </View>
+            <View style={[s.toggleTrack, enabled && s.toggleTrackOn]}>
+                <View style={[s.toggleThumb, enabled && s.toggleThumbOn]} />
+            </View>
+        </Pressable>
+    );
+}
+
+function SectionHeader({ label }: { label: string }) {
+    return (
+        <View style={s.sectionHeader}>
+            <View style={s.sectionLine} />
+            <Text style={s.sectionTitle}>{label}</Text>
+            <View style={s.sectionLine} />
+        </View>
+    );
+}
+
 export function SettingsOverlay({ onClose }: { onClose: () => void }) {
     const opacity = useSharedValue(0);
-    const { soundEnabled, vibrationEnabled, toggleSound, toggleVibration, resetAllData } = useSettings();
+    const {
+        soundEnabled, vibrationEnabled, largeText, highContrast,
+        toggleSound, toggleVibration, toggleLargeText, toggleHighContrast,
+        resetAllData,
+    } = useSettings();
     const [resetting, setResetting] = useState(false);
 
     React.useEffect(() => {
@@ -15,8 +60,12 @@ export function SettingsOverlay({ onClose }: { onClose: () => void }) {
     }, []);
 
     const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
-
     const appVersion = Constants.expoConfig?.version ?? "1.0.0";
+
+    function handleClose() {
+        opacity.value = withTiming(0, { duration: 200 });
+        setTimeout(onClose, 220);
+    }
 
     function handleReset() {
         Alert.alert(
@@ -43,58 +92,73 @@ export function SettingsOverlay({ onClose }: { onClose: () => void }) {
             <Text style={s.title}>AYARLAR</Text>
             <View style={s.separator} />
 
-            {/* Sound Toggle */}
-            <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Toggle Sound"
-                style={s.row}
-                onPress={toggleSound}
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={s.scrollContent}
             >
-                <Text style={s.label}>SES</Text>
-                <View style={[s.toggleTrack, soundEnabled && s.toggleTrackOn]}>
-                    <View style={[s.toggleThumb, soundEnabled && s.toggleThumbOn]} />
-                </View>
-            </Pressable>
+                {/* Ses & Titreşim */}
+                <SectionHeader label="SES & TİTREŞİM" />
 
-            {/* Vibration Toggle */}
-            <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Toggle Vibration"
-                style={s.row}
-                onPress={toggleVibration}
-            >
-                <Text style={s.label}>TİTREŞİM</Text>
-                <View style={[s.toggleTrack, vibrationEnabled && s.toggleTrackOn]}>
-                    <View style={[s.toggleThumb, vibrationEnabled && s.toggleThumbOn]} />
-                </View>
-            </Pressable>
+                <ToggleRow
+                    label="SES"
+                    enabled={soundEnabled}
+                    onToggle={toggleSound}
+                    accessLabel="Toggle Sound"
+                />
+                <ToggleRow
+                    label="TİTREŞİM"
+                    enabled={vibrationEnabled}
+                    onToggle={toggleVibration}
+                    accessLabel="Toggle Vibration"
+                />
 
-            <View style={s.divider} />
+                <View style={s.divider} />
 
-            {/* Reset Data */}
-            <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Reset All Data"
-                onPress={handleReset}
-                disabled={resetting}
-                style={({ pressed }) => [s.resetBtn, pressed && { opacity: 0.6 }]}
-            >
-                <Text style={s.resetBtnText}>{resetting ? "SİFIRLANIYOR..." : "VERİLERİ SIFIRLA"}</Text>
-            </Pressable>
+                {/* Erişilebilirlik */}
+                <SectionHeader label="ERİŞİLEBİLİRLİK" />
 
-            <View style={{ height: 32 }} />
+                <ToggleRow
+                    label="BÜYÜK YAZI"
+                    sublabel="Skor ve hit etiketlerini büyütür"
+                    enabled={largeText}
+                    onToggle={toggleLargeText}
+                    accessLabel="Toggle Large Text"
+                />
+                <ToggleRow
+                    label="YÜKSEK KONTRAST"
+                    sublabel="Halka ve metin parlaklığını artırır"
+                    enabled={highContrast}
+                    onToggle={toggleHighContrast}
+                    accessLabel="Toggle High Contrast"
+                />
 
-            {/* Close */}
+                <View style={s.divider} />
+
+                {/* Veri */}
+                <SectionHeader label="VERİLER" />
+
+                <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Reset All Data"
+                    onPress={handleReset}
+                    disabled={resetting}
+                    style={({ pressed }) => [s.resetBtn, pressed && { opacity: 0.6 }]}
+                >
+                    <Text style={s.resetBtnText}>{resetting ? "SİFIRLANIYOR..." : "VERİLERİ SIFIRLA"}</Text>
+                </Pressable>
+            </ScrollView>
+
+            <View style={{ height: 20 }} />
+
             <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Close Settings"
-                onPress={onClose}
+                onPress={handleClose}
                 style={({ pressed }) => [s.closeBtn, pressed && { opacity: 0.6 }]}
             >
                 <Text style={s.closeBtnText}>KAPAT</Text>
             </Pressable>
 
-            {/* Version */}
             <Text style={s.version}>RingLock v{appVersion}</Text>
         </Animated.View>
     );
@@ -118,27 +182,60 @@ const s = StyleSheet.create({
         width: 110,
         height: 1,
         backgroundColor: "rgba(0,255,232,0.22)",
-        marginBottom: 30,
+        marginBottom: 24,
+    },
+    scrollContent: {
+        alignItems: "center",
+        width: 280,
+        paddingBottom: 8,
+    },
+    sectionHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 10,
+        width: 260,
+        marginBottom: 16,
+    },
+    sectionLine: {
+        flex: 1,
+        height: StyleSheet.hairlineWidth,
+        backgroundColor: "rgba(0,255,232,0.12)",
+    },
+    sectionTitle: {
+        fontFamily: "Orbitron_400Regular",
+        fontSize: 7,
+        letterSpacing: 4,
+        color: "rgba(0,255,232,0.3)",
     },
     divider: {
-        width: 240,
+        width: 260,
         height: 1,
-        backgroundColor: "rgba(0,255,232,0.10)",
-        marginTop: 8,
-        marginBottom: 24,
+        backgroundColor: "rgba(0,255,232,0.07)",
+        marginTop: 4,
+        marginBottom: 20,
     },
     row: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        width: 240,
-        marginBottom: 24,
+        width: 260,
+        marginBottom: 20,
+    },
+    rowLeft: {
+        flex: 1,
+        gap: 3,
     },
     label: {
         fontFamily: "Orbitron_700Bold",
         fontSize: 13,
         letterSpacing: 3,
         color: C.subtleText,
+    },
+    sublabel: {
+        fontFamily: "Orbitron_400Regular",
+        fontSize: 8,
+        letterSpacing: 1,
+        color: "rgba(255,255,255,0.2)",
     },
     toggleTrack: {
         width: 50,
@@ -171,6 +268,7 @@ const s = StyleSheet.create({
         borderRadius: 3,
         paddingHorizontal: 24,
         paddingVertical: 10,
+        marginTop: 4,
     },
     resetBtnText: {
         fontFamily: "Orbitron_700Bold",
@@ -196,6 +294,6 @@ const s = StyleSheet.create({
         fontSize: 10,
         color: "rgba(0,255,232,0.2)",
         letterSpacing: 2,
-        marginTop: 28,
+        marginTop: 20,
     },
 });

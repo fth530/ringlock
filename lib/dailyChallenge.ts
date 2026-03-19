@@ -85,6 +85,18 @@ export async function completeDailyChallenge(date: string, score: number): Promi
     await AsyncStorage.setItem(challengeKey(date), JSON.stringify(result));
 }
 
+const DAILY_COUNT_KEY = "ringlock_daily_completed_count";
+
+export async function getDailyCompletedCount(): Promise<number> {
+    const raw = await AsyncStorage.getItem(DAILY_COUNT_KEY);
+    return raw ? parseInt(raw, 10) : 0;
+}
+
+async function incrementDailyCount(): Promise<void> {
+    const current = await getDailyCompletedCount();
+    await AsyncStorage.setItem(DAILY_COUNT_KEY, String(current + 1));
+}
+
 export async function checkAndCompleteDailyChallenge(
     challenge: DailyChallenge,
     gameStats: { score: number; maxCombo: number; perfectCount: number; gameMode: GameMode }
@@ -105,6 +117,7 @@ export async function checkAndCompleteDailyChallenge(
 
     if (achieved) {
         await completeDailyChallenge(challenge.date, gameStats.score);
+        await incrementDailyCount();
     }
     return achieved;
 }
