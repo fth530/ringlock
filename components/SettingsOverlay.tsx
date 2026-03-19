@@ -1,18 +1,42 @@
-import React from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import React, { useState } from "react";
+import { View, Text, StyleSheet, Pressable, Alert } from "react-native";
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from "react-native-reanimated";
+import Constants from "expo-constants";
 import { C } from "@/constants/game";
 import { useSettings } from "@/lib/SettingsContext";
 
 export function SettingsOverlay({ onClose }: { onClose: () => void }) {
     const opacity = useSharedValue(0);
-    const { soundEnabled, vibrationEnabled, toggleSound, toggleVibration } = useSettings();
+    const { soundEnabled, vibrationEnabled, toggleSound, toggleVibration, resetAllData } = useSettings();
+    const [resetting, setResetting] = useState(false);
 
     React.useEffect(() => {
         opacity.value = withTiming(1, { duration: 300 });
     }, []);
 
     const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
+
+    const appVersion = Constants.expoConfig?.version ?? "1.0.0";
+
+    function handleReset() {
+        Alert.alert(
+            "VERİLERİ SIFIRLA",
+            "Tüm skorlar, başarımlar ve ayarlar silinecek. Bu işlem geri alınamaz.",
+            [
+                { text: "İptal", style: "cancel" },
+                {
+                    text: "Sıfırla",
+                    style: "destructive",
+                    onPress: async () => {
+                        setResetting(true);
+                        await resetAllData();
+                        setResetting(false);
+                        onClose();
+                    },
+                },
+            ]
+        );
+    }
 
     return (
         <Animated.View style={[StyleSheet.absoluteFill, s.wrap, style]}>
@@ -39,13 +63,26 @@ export function SettingsOverlay({ onClose }: { onClose: () => void }) {
                 style={s.row}
                 onPress={toggleVibration}
             >
-                <Text style={s.label}>TITRESIM</Text>
+                <Text style={s.label}>TİTREŞİM</Text>
                 <View style={[s.toggleTrack, vibrationEnabled && s.toggleTrackOn]}>
                     <View style={[s.toggleThumb, vibrationEnabled && s.toggleThumbOn]} />
                 </View>
             </Pressable>
 
-            <View style={{ height: 40 }} />
+            <View style={s.divider} />
+
+            {/* Reset Data */}
+            <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Reset All Data"
+                onPress={handleReset}
+                disabled={resetting}
+                style={({ pressed }) => [s.resetBtn, pressed && { opacity: 0.6 }]}
+            >
+                <Text style={s.resetBtnText}>{resetting ? "SİFIRLANIYOR..." : "VERİLERİ SIFIRLA"}</Text>
+            </Pressable>
+
+            <View style={{ height: 32 }} />
 
             {/* Close */}
             <Pressable
@@ -56,6 +93,9 @@ export function SettingsOverlay({ onClose }: { onClose: () => void }) {
             >
                 <Text style={s.closeBtnText}>KAPAT</Text>
             </Pressable>
+
+            {/* Version */}
+            <Text style={s.version}>RingLock v{appVersion}</Text>
         </Animated.View>
     );
 }
@@ -79,6 +119,13 @@ const s = StyleSheet.create({
         height: 1,
         backgroundColor: "rgba(0,255,232,0.22)",
         marginBottom: 30,
+    },
+    divider: {
+        width: 240,
+        height: 1,
+        backgroundColor: "rgba(0,255,232,0.10)",
+        marginTop: 8,
+        marginBottom: 24,
     },
     row: {
         flexDirection: "row",
@@ -118,6 +165,19 @@ const s = StyleSheet.create({
         backgroundColor: C.cyan,
         alignSelf: "flex-end",
     },
+    resetBtn: {
+        borderWidth: 1,
+        borderColor: "rgba(255,0,102,0.5)",
+        borderRadius: 3,
+        paddingHorizontal: 24,
+        paddingVertical: 10,
+    },
+    resetBtnText: {
+        fontFamily: "Orbitron_700Bold",
+        fontSize: 11,
+        letterSpacing: 3,
+        color: C.pink,
+    },
     closeBtn: {
         borderWidth: 1,
         borderColor: C.pink,
@@ -130,5 +190,12 @@ const s = StyleSheet.create({
         fontSize: 13,
         letterSpacing: 4,
         color: C.pink,
+    },
+    version: {
+        fontFamily: "Orbitron_400Regular",
+        fontSize: 10,
+        color: "rgba(0,255,232,0.2)",
+        letterSpacing: 2,
+        marginTop: 28,
     },
 });
