@@ -309,7 +309,11 @@ export function useGameLoop(topPad: number, botPad: number) {
     }, [doGameOver, flashOpacity, haptic, playMissSound, spawnRing, triggerShake, ringRadius2]);
 
     const doHit = useCallback((quality: HitQuality, bonusPoint = false) => {
-        scoreRef.current += bonusPoint ? 2 : 1;
+        const multiplier = comboRef.current >= 20 ? 4
+            : comboRef.current >= 10 ? 3
+            : comboRef.current >= 5  ? 2 : 1;
+        const base = bonusPoint ? 2 : 1;
+        scoreRef.current += base * multiplier;
         setScore(scoreRef.current);
         comboRef.current += 1;
         setCombo(comboRef.current);

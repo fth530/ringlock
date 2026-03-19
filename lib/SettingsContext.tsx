@@ -6,6 +6,7 @@ interface Settings {
     vibrationEnabled: boolean;
     largeText: boolean;
     highContrast: boolean;
+    musicEnabled: boolean;
 }
 
 interface SettingsState extends Settings {
@@ -13,6 +14,7 @@ interface SettingsState extends Settings {
     toggleVibration: () => void;
     toggleLargeText: () => void;
     toggleHighContrast: () => void;
+    toggleMusic: () => void;
     resetAllData: () => Promise<void>;
 }
 
@@ -41,6 +43,7 @@ const DEFAULT: Settings = {
     vibrationEnabled: true,
     largeText: false,
     highContrast: false,
+    musicEnabled: true,
 };
 
 const SettingsContext = createContext<SettingsState>({
@@ -49,6 +52,7 @@ const SettingsContext = createContext<SettingsState>({
     toggleVibration: () => { },
     toggleLargeText: () => { },
     toggleHighContrast: () => { },
+    toggleMusic: () => { },
     resetAllData: async () => { },
 });
 
@@ -66,6 +70,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
                         vibrationEnabled: typeof parsed.vibrationEnabled === "boolean" ? parsed.vibrationEnabled : true,
                         largeText: typeof parsed.largeText === "boolean" ? parsed.largeText : false,
                         highContrast: typeof parsed.highContrast === "boolean" ? parsed.highContrast : false,
+                        musicEnabled: typeof parsed.musicEnabled === "boolean" ? parsed.musicEnabled : true,
                     };
                     settingsRef.current = loaded;
                     setSettings(loaded);
@@ -85,6 +90,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     const toggleVibration = useCallback(() => update({ vibrationEnabled: !settingsRef.current.vibrationEnabled }), [update]);
     const toggleLargeText = useCallback(() => update({ largeText: !settingsRef.current.largeText }), [update]);
     const toggleHighContrast = useCallback(() => update({ highContrast: !settingsRef.current.highContrast }), [update]);
+    const toggleMusic = useCallback(() => update({ musicEnabled: !settingsRef.current.musicEnabled }), [update]);
 
     const resetAllData = useCallback(async () => {
         await AsyncStorage.multiRemove(ALL_KEYS);
@@ -99,6 +105,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
             toggleVibration,
             toggleLargeText,
             toggleHighContrast,
+            toggleMusic,
             resetAllData,
         }}>
             {children}

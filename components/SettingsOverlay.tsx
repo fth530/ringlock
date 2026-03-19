@@ -49,8 +49,8 @@ function SectionHeader({ label }: { label: string }) {
 export function SettingsOverlay({ onClose }: { onClose: () => void }) {
     const opacity = useSharedValue(0);
     const {
-        soundEnabled, vibrationEnabled, largeText, highContrast,
-        toggleSound, toggleVibration, toggleLargeText, toggleHighContrast,
+        soundEnabled, vibrationEnabled, largeText, highContrast, musicEnabled,
+        toggleSound, toggleVibration, toggleLargeText, toggleHighContrast, toggleMusic,
         resetAllData,
     } = useSettings();
     const [resetting, setResetting] = useState(false);
@@ -100,7 +100,15 @@ export function SettingsOverlay({ onClose }: { onClose: () => void }) {
                 <SectionHeader label="SES & TİTREŞİM" />
 
                 <ToggleRow
+                    label="MÜZİK"
+                    sublabel="Arka plan müziği"
+                    enabled={musicEnabled}
+                    onToggle={toggleMusic}
+                    accessLabel="Toggle Music"
+                />
+                <ToggleRow
                     label="SES"
+                    sublabel="Vuruş ve kaçırma sesleri"
                     enabled={soundEnabled}
                     onToggle={toggleSound}
                     accessLabel="Toggle Sound"

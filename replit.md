@@ -8,7 +8,7 @@ A cyberpunk-themed arcade ring-timing game built with React Native / Expo. Playe
 - **Language**: TypeScript
 - **Platform**: Mobile (iOS/Android) + Web via React Native Web
 - **Font**: Orbitron (Google Font — 400, 700, 900 weights)
-- **Audio**: expo-av for sound effects
+- **Audio**: expo-av for sound effects (SFX + loopable background music)
 - **Storage**: AsyncStorage for local/offline persistence
 - **Architecture**: Frontend-only (offline mode, no backend)
 - **Packages**: expo-haptics, react-native-reanimated, expo-store-review
@@ -27,6 +27,7 @@ components/
   GameOverOverlay.tsx         # Enhanced with YENİ REKOR gold badge
   GridBackground.tsx
   MainMenu.tsx                # 5 icon buttons: Başarımlar, Skorlar, Temalar, Görev, Ayarlar
+  ModeIntroOverlay.tsx        # Mirror / Dual first-play tutorial (AsyncStorage gated)
   ModeSelect.tsx
   ParticleEffect.tsx          # Neon particles on PERFECT hit
   ScoresOverlay.tsx

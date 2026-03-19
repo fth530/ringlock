@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { View, StyleSheet, Pressable, Text, Platform } from "react-native";
 import Animated, {
   useSharedValue,
@@ -24,6 +24,7 @@ import { AchievementsOverlay } from "@/components/AchievementsOverlay";
 import { ScoresOverlay } from "@/components/ScoresOverlay";
 import { ParticleEffect } from "@/components/ParticleEffect";
 import { TutorialOverlay, shouldShowTutorial } from "@/components/TutorialOverlay";
+import { ModeIntroOverlay, shouldShowModeIntro } from "@/components/ModeIntroOverlay";
 import { ThemeOverlay } from "@/components/ThemeOverlay";
 import { DailyChallengeOverlay } from "@/components/DailyChallengeOverlay";
 import { useTheme } from "@/lib/ThemeContext";
@@ -91,10 +92,18 @@ function ComboCounter({ combo }: { combo: number }) {
   const comboLabel =
     combo >= 10 ? "İNANILMAZ" : combo >= 5 ? "HARİKA" : combo >= 3 ? "İYİ" : "";
   const fontSize = largeText ? 42 : 32;
+  const multiplier = combo >= 20 ? 4 : combo >= 10 ? 3 : combo >= 5 ? 2 : 1;
 
   return (
     <Animated.View style={[s.comboWrap, animStyle]} pointerEvents="none">
-      <Text style={[s.comboCount, { color: comboColor, fontSize }]}>{combo}x</Text>
+      <View style={s.comboRow}>
+        <Text style={[s.comboCount, { color: comboColor, fontSize }]}>{combo}x</Text>
+        {multiplier > 1 && (
+          <View style={[s.multiBadge, { borderColor: comboColor }]}>
+            <Text style={[s.multiBadgeText, { color: comboColor }]}>×{multiplier}</Text>
+          </View>
+        )}
+      </View>
       {comboLabel !== "" && (
         <Text style={[s.comboLabel, { color: comboColor }]}>{comboLabel}</Text>
       )}
@@ -153,6 +162,8 @@ export default function GameScreen() {
   const [showTutorial, setShowTutorial] = useState(false);
   const [showTheme, setShowTheme] = useState(false);
   const [showDailyChallenge, setShowDailyChallenge] = useState(false);
+  const [showModeIntro, setShowModeIntro] = useState<"mirror" | "dual" | null>(null);
+  const pendingModeRef = useRef<GameMode | null>(null);
 
   const {
     score, bestScore, phase, finalScore,
@@ -184,9 +195,24 @@ export default function GameScreen() {
   const bgColors = visualPhase <= 1 ? activeBg.colors : getPhaseColors(visualPhase);
 
   const onPlay = () => setShowModeSelect(true);
-  const onModeSelect = (mode: GameMode) => {
+  const onModeSelect = async (mode: GameMode) => {
     setShowModeSelect(false);
+    if (mode === "mirror" || mode === "dual") {
+      const needsIntro = await shouldShowModeIntro(mode);
+      if (needsIntro) {
+        pendingModeRef.current = mode;
+        setShowModeIntro(mode);
+        return;
+      }
+    }
     beginGame(mode);
+  };
+  const onModeIntroDone = () => {
+    setShowModeIntro(null);
+    if (pendingModeRef.current) {
+      beginGame(pendingModeRef.current);
+      pendingModeRef.current = null;
+    }
   };
   const onModeBack = () => setShowModeSelect(false);
 
@@ -284,7 +310,7 @@ export default function GameScreen() {
         />
       )}
 
-      {/* Secondary ring (dual mode only) */}
+      {/* Secondary ring (dual mode only) — pembe/kırmızı ile görsel ayrım */}
       {showRings && isDualMode && (
         <RingsAnchor
           anchorX={anchorX2}
@@ -292,7 +318,8 @@ export default function GameScreen() {
           ringRadius={ringRadius2}
           targetScale={targetScale2}
           targetColor={targetColor2}
-          ringColor={activeRing.color}
+          ringColor="#FF0066"
+          targetBaseColor="#FF0066"
           thick={highContrast}
         />
       )}
@@ -367,6 +394,11 @@ export default function GameScreen() {
       {/* Tutorial overlay — shown on first launch */}
       {showTutorial && (
         <TutorialOverlay onDone={() => setShowTutorial(false)} />
+      )}
+
+      {/* Mode intro overlay — Mirror / Dual ilk kullanımda */}
+      {showModeIntro && (
+        <ModeIntroOverlay mode={showModeIntro} onDone={onModeIntroDone} />
       )}
 
       {/* Theme overlay */}
@@ -454,6 +486,11 @@ const s = StyleSheet.create({
     alignItems: "center",
     zIndex: 10,
   },
+  comboRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
   comboCount: {
     fontFamily: "Orbitron_900Black",
     fontSize: 32,
@@ -463,6 +500,18 @@ const s = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 4,
     marginTop: 2,
+  },
+  multiBadge: {
+    borderWidth: 1,
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginTop: 2,
+  },
+  multiBadgeText: {
+    fontFamily: "Orbitron_700Bold",
+    fontSize: 14,
+    letterSpacing: 1,
   },
   livesWrap: {
     position: "absolute",

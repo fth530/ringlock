@@ -10,12 +10,18 @@ import { C, TARGET_R, GLOW_MID_R, GLOW_OUT_R } from "@/constants/game";
 export function TargetRing({
     scale,
     colorProgress,
+    baseColor,
 }: {
     scale: SharedValue<number>;
     colorProgress: SharedValue<number>;
+    baseColor?: string;
 }) {
+    const idleColor     = baseColor ?? C.cyan;
+    const idleSoft      = baseColor ? `${baseColor}80` : C.cyanSoft;
+    const idleFaint     = baseColor ? `${baseColor}40` : C.cyanFaint;
+
     const ringStyle = useAnimatedStyle(() => {
-        const bc = interpolateColor(colorProgress.value, [0, 1], [C.cyan, C.pink]);
+        const bc = interpolateColor(colorProgress.value, [0, 1], [idleColor, C.pink]);
         return {
             transform: [{ translateX: -TARGET_R }, { translateY: -TARGET_R }, { scale: scale.value }],
             borderColor: bc,
@@ -23,7 +29,7 @@ export function TargetRing({
     });
 
     const glowMidStyle = useAnimatedStyle(() => {
-        const bc = interpolateColor(colorProgress.value, [0, 1], [C.cyanSoft, C.pinkSoft]);
+        const bc = interpolateColor(colorProgress.value, [0, 1], [idleSoft, C.pinkSoft]);
         return {
             transform: [{ translateX: -GLOW_MID_R }, { translateY: -GLOW_MID_R }, { scale: scale.value }],
             borderColor: bc,
@@ -31,7 +37,7 @@ export function TargetRing({
     });
 
     const glowOutStyle = useAnimatedStyle(() => {
-        const bc = interpolateColor(colorProgress.value, [0, 1], [C.cyanFaint, C.pinkFaint]);
+        const bc = interpolateColor(colorProgress.value, [0, 1], [idleFaint, C.pinkFaint]);
         return {
             transform: [{ translateX: -GLOW_OUT_R }, { translateY: -GLOW_OUT_R }, { scale: scale.value }],
             borderColor: bc,
@@ -121,6 +127,7 @@ export function RingsAnchor({
     targetScale,
     targetColor,
     ringColor,
+    targetBaseColor,
     thick,
 }: {
     anchorX: SharedValue<number>;
@@ -129,6 +136,7 @@ export function RingsAnchor({
     targetScale: SharedValue<number>;
     targetColor: SharedValue<number>;
     ringColor?: string;
+    targetBaseColor?: string;
     thick?: boolean;
 }) {
     const anchorStyle = useAnimatedStyle(() => ({
@@ -141,7 +149,7 @@ export function RingsAnchor({
             style={[styles.ringAnchor, anchorStyle]}
             pointerEvents="none"
         >
-            <TargetRing scale={targetScale} colorProgress={targetColor} />
+            <TargetRing scale={targetScale} colorProgress={targetColor} baseColor={targetBaseColor} />
             <ShrinkingRing radius={ringRadius} color={ringColor} thick={thick} />
         </Animated.View>
     );

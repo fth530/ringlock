@@ -11,10 +11,19 @@ import {
   Orbitron_900Black,
 } from "@expo-google-fonts/orbitron";
 import { soundManager } from "@/lib/sounds";
-import { SettingsProvider } from "@/lib/SettingsContext";
+import { musicManager } from "@/lib/music";
+import { SettingsProvider, useSettings } from "@/lib/SettingsContext";
 import { ThemeProvider } from "@/lib/ThemeContext";
 
 SplashScreen.preventAutoHideAsync();
+
+function MusicController() {
+  const { musicEnabled } = useSettings();
+  useEffect(() => {
+    musicManager.setEnabled(musicEnabled);
+  }, [musicEnabled]);
+  return null;
+}
 
 function RootLayoutNav() {
   return (
@@ -37,7 +46,7 @@ export default function RootLayout() {
   useEffect(() => {
     async function prepare() {
       try {
-        await soundManager.init();
+        await Promise.all([soundManager.init(), musicManager.init()]);
       } catch (e) {
         console.warn(e);
       } finally {
@@ -49,6 +58,7 @@ export default function RootLayout() {
 
     return () => {
       soundManager.release();
+      musicManager.release();
     };
   }, []);
 
@@ -66,6 +76,7 @@ export default function RootLayout() {
   return (
     <ErrorBoundary>
       <SettingsProvider>
+        <MusicController />
         <ThemeProvider>
           <GestureHandlerRootView style={{ flex: 1 }}>
             <Animated.View style={[{ flex: 1 }, fadeStyle]}>
