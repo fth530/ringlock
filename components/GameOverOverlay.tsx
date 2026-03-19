@@ -36,25 +36,41 @@ function FadeSlide({ delay, children }: { delay: number; children: React.ReactNo
     return <Animated.View style={style}>{children}</Animated.View>;
 }
 
-function ScoreRing({ color }: { color: string }) {
+function ScoreRing({ color, isNewRecord }: { color: string; isNewRecord: boolean }) {
     const rot = useSharedValue(0);
     const opacity = useSharedValue(0);
+    const glow = useSharedValue(0);
     useEffect(() => {
         opacity.value = withDelay(100, withTiming(1, { duration: 600 }));
-        rot.value = withRepeat(withTiming(360, { duration: 20000, easing: Easing.linear }), -1, false);
-    }, []);
+        rot.value = withRepeat(withTiming(360, { duration: isNewRecord ? 8000 : 20000, easing: Easing.linear }), -1, false);
+        if (isNewRecord) {
+            glow.value = withDelay(400, withRepeat(
+                withSequence(
+                    withTiming(1, { duration: 700, easing: Easing.out(Easing.quad) }),
+                    withTiming(0.3, { duration: 700, easing: Easing.in(Easing.quad) })
+                ),
+                -1, true
+            ));
+        }
+    }, [isNewRecord]);
     const outer = useAnimatedStyle(() => ({
         opacity: opacity.value,
         transform: [{ rotate: `${rot.value}deg` }],
+        borderColor: isNewRecord
+            ? `rgba(255,215,0,${interpolate(glow.value, [0, 1], [0.1, 0.5])})`
+            : `${color}15`,
     }));
     const inner = useAnimatedStyle(() => ({
         opacity: opacity.value,
         transform: [{ rotate: `-${rot.value * 0.6}deg` }],
+        borderColor: isNewRecord
+            ? `rgba(255,215,0,${interpolate(glow.value, [0, 1], [0.15, 0.6])})`
+            : `${color}25`,
     }));
     return (
         <>
-            <Animated.View style={[s.scoreRing, s.scoreRingOuter, { borderColor: `${color}15` }, outer]} />
-            <Animated.View style={[s.scoreRing, s.scoreRingInner, { borderColor: `${color}25` }, inner]} />
+            <Animated.View style={[s.scoreRing, s.scoreRingOuter, outer]} />
+            <Animated.View style={[s.scoreRing, s.scoreRingInner, inner]} />
         </>
     );
 }
@@ -88,6 +104,7 @@ export function GameOverOverlay({
     bestScore,
     maxCombo,
     gameMode = "classic",
+    isNewRecord = false,
     onRestart,
     onMenu,
 }: {
@@ -95,17 +112,25 @@ export function GameOverOverlay({
     bestScore: number;
     maxCombo?: number;
     gameMode?: GameMode;
+    isNewRecord?: boolean;
     onRestart: () => void;
     onMenu: () => void;
 }) {
     const bg = useSharedValue(0);
+    const recordScale = useSharedValue(0);
     useEffect(() => {
         bg.value = withTiming(1, { duration: 500 });
-    }, []);
+        if (isNewRecord) {
+            recordScale.value = withDelay(500, withSequence(
+                withTiming(1.2, { duration: 300, easing: Easing.out(Easing.back(3)) }),
+                withTiming(1, { duration: 200 })
+            ));
+        }
+    }, [isNewRecord]);
     const bgStyle = useAnimatedStyle(() => ({ opacity: bg.value }));
+    const recordStyle = useAnimatedStyle(() => ({ transform: [{ scale: recordScale.value }] }));
 
-    const modeColor = MODE_COLORS[gameMode];
-    const isNewBest = score > 0 && score >= bestScore;
+    const modeColor = isNewRecord ? C.gold : MODE_COLORS[gameMode];
 
     return (
         <Animated.View style={[StyleSheet.absoluteFill, s.overlay, bgStyle]}>
@@ -128,19 +153,20 @@ export function GameOverOverlay({
 
                 {/* ── Score circle area ── */}
                 <View style={s.scoreArea}>
-                    <ScoreRing color={modeColor} />
+                    <ScoreRing color={modeColor} isNewRecord={isNewRecord} />
                     <ScoreReveal value={score} color={modeColor} />
                 </View>
 
                 {/* ── New record ── */}
-                {isNewBest && (
-                    <FadeSlide delay={500}>
-                        <View style={s.newRecordWrap}>
-                            <Text style={s.newRecordStar}>★</Text>
-                            <Text style={s.newRecordLabel}>YENI REKOR</Text>
-                            <Text style={s.newRecordStar}>★</Text>
+                {isNewRecord && (
+                    <Animated.View style={[s.newRecordWrap, recordStyle]}>
+                        <Text style={s.newRecordStar}>★</Text>
+                        <View style={s.newRecordInner}>
+                            <Text style={s.newRecordLabel}>YENİ REKOR</Text>
+                            <Text style={s.newRecordSub}>Tebrikler!</Text>
                         </View>
-                    </FadeSlide>
+                        <Text style={s.newRecordStar}>★</Text>
+                    </Animated.View>
                 )}
 
                 {/* ── Stats card ── */}
@@ -307,17 +333,33 @@ const s = StyleSheet.create({
     newRecordWrap: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 8,
+        gap: 10,
+        backgroundColor: "rgba(255,215,0,0.08)",
+        borderWidth: 1,
+        borderColor: "rgba(255,215,0,0.3)",
+        borderRadius: 10,
+        paddingHorizontal: 18,
+        paddingVertical: 10,
+    },
+    newRecordInner: {
+        alignItems: "center",
     },
     newRecordStar: {
-        fontSize: 14,
+        fontSize: 18,
         color: C.gold,
     },
     newRecordLabel: {
-        fontFamily: "Orbitron_700Bold",
-        fontSize: 12,
+        fontFamily: "Orbitron_900Black",
+        fontSize: 14,
         letterSpacing: 4,
         color: C.gold,
+    },
+    newRecordSub: {
+        fontFamily: "Orbitron_400Regular",
+        fontSize: 9,
+        letterSpacing: 3,
+        color: "rgba(255,215,0,0.6)",
+        marginTop: 3,
     },
 
     // Stats card

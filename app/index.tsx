@@ -22,6 +22,8 @@ import { SettingsOverlay } from "@/components/SettingsOverlay";
 import { AchievementToast } from "@/components/AchievementToast";
 import { AchievementsOverlay } from "@/components/AchievementsOverlay";
 import { ScoresOverlay } from "@/components/ScoresOverlay";
+import { ParticleEffect } from "@/components/ParticleEffect";
+import { TutorialOverlay, shouldShowTutorial } from "@/components/TutorialOverlay";
 
 // ─── Hit Quality Label ────────────────────────────────────────────────────────
 function HitQualityLabel({ quality }: { quality: HitQuality }) {
@@ -138,16 +140,26 @@ export default function GameScreen() {
   const [showModeSelect, setShowModeSelect] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showScores, setShowScores] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
 
   const {
     score, bestScore, phase, finalScore,
     combo, maxCombo, hitQuality, lives, visualPhase,
     gameMode, timeLeft, newAchievements,
+    perfectTrigger, perfectPos, isNewRecord,
     ringRadius, flashOpacity, targetScale, targetColor, anchorX, anchorY,
+    shakeAnim,
     beginGame, handleRestart, handleMenu, handleScreenTap,
   } = useGameLoop(topPad, botPad);
 
   const [toastIndex, setToastIndex] = useState(0);
+
+  // Check if tutorial should be shown on first launch
+  useEffect(() => {
+    shouldShowTutorial().then((show) => {
+      if (show) setShowTutorial(true);
+    });
+  }, []);
 
   useEffect(() => {
     if (newAchievements.length > 0) setToastIndex(0);
@@ -164,8 +176,12 @@ export default function GameScreen() {
   };
   const onModeBack = () => setShowModeSelect(false);
 
+  const shakeStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: shakeAnim.value }],
+  }));
+
   return (
-    <View style={s.root}>
+    <Animated.View style={[s.root, shakeStyle]}>
       <StatusBar style="light" />
 
       {/* Background */}
@@ -255,6 +271,11 @@ export default function GameScreen() {
       {/* Flash */}
       <FlashOverlay opacity={flashOpacity} />
 
+      {/* Particle effects on PERFECT hit */}
+      {phase === "playing" && perfectTrigger > 0 && (
+        <ParticleEffect key={perfectTrigger} cx={perfectPos.x} cy={perfectPos.y} />
+      )}
+
       {/* Main menu + settings gear */}
       {phase === "menu" && !showModeSelect && (
         <>
@@ -282,6 +303,7 @@ export default function GameScreen() {
           bestScore={bestScore}
           maxCombo={maxCombo}
           gameMode={gameMode}
+          isNewRecord={isNewRecord}
           onRestart={handleRestart}
           onMenu={handleMenu}
         />
@@ -310,7 +332,12 @@ export default function GameScreen() {
           onDone={() => setToastIndex((i) => i + 1)}
         />
       )}
-    </View>
+
+      {/* Tutorial overlay — shown on first launch */}
+      {showTutorial && (
+        <TutorialOverlay onDone={() => setShowTutorial(false)} />
+      )}
+    </Animated.View>
   );
 }
 

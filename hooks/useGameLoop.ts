@@ -50,6 +50,9 @@ export function useGameLoop(topPad: number, botPad: number) {
     const [gameMode, setGameMode] = useState<GameMode>("classic");
     const [timeLeft, setTimeLeft] = useState(0);
     const [newAchievements, setNewAchievements] = useState<Achievement[]>([]);
+    const [perfectTrigger, setPerfectTrigger] = useState(0);
+    const [perfectPos, setPerfectPos] = useState<{ x: number; y: number }>({ x: SCREEN_W / 2, y: SCREEN_H / 2 });
+    const [isNewRecord, setIsNewRecord] = useState(false);
 
     const phaseRef = useRef<Phase>("menu");
     const perfectCountRef = useRef(0);
@@ -65,7 +68,6 @@ export function useGameLoop(topPad: number, botPad: number) {
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const timeLeftRef = useRef(0);
 
-    // Settings refs — stale closure prevention
     const soundRef = useRef(soundEnabled);
     const vibrationRef = useRef(vibrationEnabled);
     useEffect(() => { soundRef.current = soundEnabled; }, [soundEnabled]);
@@ -77,8 +79,8 @@ export function useGameLoop(topPad: number, botPad: number) {
     const targetColor = useSharedValue(0);
     const anchorX = useSharedValue(SCREEN_W / 2);
     const anchorY = useSharedValue(SCREEN_H / 2);
+    const shakeAnim = useSharedValue(0);
 
-    // Load best score for current mode
     useEffect(() => {
         AsyncStorage.getItem(bestKey(gameMode)).then((v: string | null) => {
             if (v) setBestScore(parseInt(v, 10));
@@ -92,6 +94,9 @@ export function useGameLoop(topPad: number, botPad: number) {
             if (s > prev) {
                 AsyncStorage.setItem(bestKey(mode), String(s));
                 setBestScore(s);
+                setIsNewRecord(true);
+            } else {
+                setIsNewRecord(false);
             }
         });
     }, []);
@@ -134,7 +139,6 @@ export function useGameLoop(topPad: number, botPad: number) {
         playSound("gameover");
         saveBest(s, modeRef.current);
 
-        // Check achievements
         updateLifetimeStats(s).then(({ totalGames, totalScore }) => {
             const stats: GameStats = {
                 score: s,
@@ -152,6 +156,17 @@ export function useGameLoop(topPad: number, botPad: number) {
             });
         });
     }, [saveBest, haptic, playSound, clearTimer]);
+
+    const triggerShake = useCallback(() => {
+        shakeAnim.value = withSequence(
+            withTiming(9, { duration: 35 }),
+            withTiming(-9, { duration: 35 }),
+            withTiming(6, { duration: 30 }),
+            withTiming(-6, { duration: 30 }),
+            withTiming(3, { duration: 25 }),
+            withTiming(0, { duration: 25 })
+        );
+    }, [shakeAnim]);
 
     const spawnRing = useCallback((dur: number) => {
         const pos = randomTargetPos(topPad, botPad);
@@ -174,10 +189,10 @@ export function useGameLoop(topPad: number, botPad: number) {
         setCombo(0);
         setHitQuality(null);
         haptic("warning");
+        triggerShake();
 
         const mode = GAME_MODES[modeRef.current];
 
-        // Zen mode: no life loss
         if (mode.lives === 0) {
             flashOpacity.value = withSequence(
                 withTiming(0.2, { duration: 50 }),
@@ -201,7 +216,7 @@ export function useGameLoop(topPad: number, botPad: number) {
             durRef.current = Math.max(mode.minDur, durRef.current + 20);
             spawnRing(durRef.current);
         }
-    }, [doGameOver, flashOpacity, haptic, spawnRing]);
+    }, [doGameOver, flashOpacity, haptic, spawnRing, triggerShake]);
 
     const doHit = useCallback((quality: HitQuality) => {
         scoreRef.current += 1;
@@ -209,8 +224,11 @@ export function useGameLoop(topPad: number, botPad: number) {
         comboRef.current += 1;
         setCombo(comboRef.current);
 
-        if (quality === "perfect") perfectCountRef.current += 1;
-        else if (quality === "good") goodCountRef.current += 1;
+        if (quality === "perfect") {
+            perfectCountRef.current += 1;
+            setPerfectPos({ x: anchorX.value, y: anchorY.value });
+            setPerfectTrigger((t) => t + 1);
+        } else if (quality === "good") goodCountRef.current += 1;
         else if (quality === "late") lateCountRef.current += 1;
 
         if (comboRef.current > maxComboRef.current) {
@@ -220,7 +238,6 @@ export function useGameLoop(topPad: number, botPad: number) {
 
         const mode = GAME_MODES[modeRef.current];
 
-        // Extra life on big combo (only for modes with lives)
         if (mode.lives > 0 && comboRef.current > 0 && comboRef.current % COMBO_FOR_EXTRA_LIFE === 0) {
             if (livesRef.current < mode.lives) {
                 livesRef.current += 1;
@@ -252,7 +269,7 @@ export function useGameLoop(topPad: number, botPad: number) {
 
         durRef.current = Math.max(mode.minDur, durRef.current - mode.durStep);
         spawnRing(durRef.current);
-    }, [spawnRing, flashOpacity, targetScale, targetColor, updateVisualPhase, haptic, playSound]);
+    }, [spawnRing, flashOpacity, targetScale, targetColor, updateVisualPhase, haptic, playSound, anchorX, anchorY]);
 
     const beginGame = useCallback((mode: GameMode = "classic") => {
         const config = GAME_MODES[mode];
@@ -275,9 +292,9 @@ export function useGameLoop(topPad: number, botPad: number) {
         setLives(config.lives);
         setHitQuality(null);
         setVisualPhase(1);
+        setIsNewRecord(false);
         setPhase("playing");
 
-        // Speed mode timer
         clearTimer();
         if (config.timeLimitSec > 0) {
             timeLeftRef.current = config.timeLimitSec;
@@ -326,14 +343,15 @@ export function useGameLoop(topPad: number, botPad: number) {
         }
     }, [ringRadius, doHit, handleMiss]);
 
-    // Cleanup timer on unmount
     useEffect(() => clearTimer, [clearTimer]);
 
     return {
         score, bestScore, phase, finalScore,
         combo, maxCombo, hitQuality, lives, visualPhase,
         gameMode, timeLeft, newAchievements,
+        perfectTrigger, perfectPos, isNewRecord,
         ringRadius, flashOpacity, targetScale, targetColor, anchorX, anchorY,
+        shakeAnim,
         beginGame, handleRestart, handleMenu, handleScreenTap,
     };
 }

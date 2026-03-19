@@ -2,6 +2,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import Animated, { useSharedValue, useAnimatedStyle, withTiming } from "react-native-reanimated";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useFonts } from "expo-font";
 import {
@@ -24,6 +25,7 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   const [appIsReady, setAppIsReady] = useState(false);
+  const fadeIn = useSharedValue(0);
 
   const [fontsLoaded] = useFonts({
     Orbitron_400Regular,
@@ -34,9 +36,6 @@ export default function RootLayout() {
   useEffect(() => {
     async function prepare() {
       try {
-        // Normalde burada Drizzle / Postgres init yapılacaktı, ama 
-        // son kararla Offline moda geçtiğimiz için sesleri ve yerel 
-        // AsyncStorage okumalarını önceden yüklüyoruz.
         await soundManager.init();
       } catch (e) {
         console.warn(e);
@@ -55,8 +54,11 @@ export default function RootLayout() {
   useEffect(() => {
     if (fontsLoaded && appIsReady) {
       SplashScreen.hideAsync();
+      fadeIn.value = withTiming(1, { duration: 600 });
     }
   }, [fontsLoaded, appIsReady]);
+
+  const fadeStyle = useAnimatedStyle(() => ({ opacity: fadeIn.value }));
 
   if (!fontsLoaded || !appIsReady) return null;
 
@@ -64,7 +66,9 @@ export default function RootLayout() {
     <ErrorBoundary>
       <SettingsProvider>
         <GestureHandlerRootView style={{ flex: 1 }}>
-          <RootLayoutNav />
+          <Animated.View style={[{ flex: 1 }, fadeStyle]}>
+            <RootLayoutNav />
+          </Animated.View>
         </GestureHandlerRootView>
       </SettingsProvider>
     </ErrorBoundary>
