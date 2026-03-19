@@ -16,10 +16,12 @@ const { width: SW } = Dimensions.get("window");
 const CARD_W = SW - 48;
 
 const MODE_COLORS: Record<GameMode, string> = {
-    classic: C.cyan,
+    classic:  C.cyan,
     hardcore: C.pink,
-    zen: C.purple,
-    speed: C.gold,
+    zen:      C.purple,
+    speed:    C.gold,
+    mirror:   "#00BFFF",
+    dual:     "#FF8C00",
 };
 
 /* ─── Animated helpers ───────────────────────────────────────────────── */

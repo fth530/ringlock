@@ -385,9 +385,11 @@ export default function GameScreen() {
 function getModeColor(mode: GameMode): string {
   switch (mode) {
     case "hardcore": return C.pink;
-    case "zen": return C.purple;
-    case "speed": return C.gold;
-    default: return C.cyan;
+    case "zen":      return C.purple;
+    case "speed":    return C.gold;
+    case "mirror":   return "#00BFFF";
+    case "dual":     return "#FF8C00";
+    default:         return C.cyan;
   }
 }
 

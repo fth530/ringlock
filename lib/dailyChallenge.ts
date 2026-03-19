@@ -106,7 +106,7 @@ export async function checkAndCompleteDailyChallenge(
 
     let achieved = false;
     if (challenge.type === "score" && gameStats.score >= challenge.target) {
-        if (challenge.mode === "classic" || gameStats.gameMode === challenge.mode) {
+        if (gameStats.gameMode === challenge.mode) {
             achieved = true;
         }
     } else if (challenge.type === "combo" && gameStats.maxCombo >= challenge.target) {

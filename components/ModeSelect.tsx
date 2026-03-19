@@ -15,7 +15,14 @@ const MODE_COLORS: Record<GameMode, string> = {
 };
 
 async function loadBestAnyMode(): Promise<number> {
-    const keys = ["ringlock_best", "ringlock_best_hardcore", "ringlock_best_zen", "ringlock_best_speed"];
+    const keys = [
+        "ringlock_best",
+        "ringlock_best_hardcore",
+        "ringlock_best_zen",
+        "ringlock_best_speed",
+        "ringlock_best_mirror",
+        "ringlock_best_dual",
+    ];
     const vals = await Promise.all(keys.map((k) => AsyncStorage.getItem(k)));
     return Math.max(0, ...vals.map((v) => (v ? parseInt(v, 10) : 0)));
 }

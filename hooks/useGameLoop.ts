@@ -125,8 +125,16 @@ export function useGameLoop(topPad: number, botPad: number) {
         else setVisualPhase(1);
     }, []);
 
-    const playSound = useCallback((key: "success" | "gameover") => {
+    const playSound = useCallback((key: "gameover") => {
         if (soundRef.current) soundManager.play(key);
+    }, []);
+
+    const playHitSound = useCallback((quality: HitQuality, combo: number) => {
+        if (soundRef.current) soundManager.playHit(quality, combo);
+    }, []);
+
+    const playMissSound = useCallback(() => {
+        if (soundRef.current) soundManager.playMiss();
     }, []);
 
     const haptic = useCallback((type: "heavy" | "medium" | "light" | "error" | "warning") => {
@@ -281,6 +289,7 @@ export function useGameLoop(topPad: number, botPad: number) {
 
         if (mode.lives === 0) {
             missFlash();
+            playMissSound();
             durRef.current = Math.max(mode.minDur, durRef.current + 20);
             spawnRing(durRef.current);
             return;
@@ -293,10 +302,11 @@ export function useGameLoop(topPad: number, botPad: number) {
             doGameOver();
         } else {
             missFlash();
+            playMissSound();
             durRef.current = Math.max(mode.minDur, durRef.current + 20);
             spawnRing(durRef.current);
         }
-    }, [doGameOver, flashOpacity, haptic, spawnRing, triggerShake, ringRadius2]);
+    }, [doGameOver, flashOpacity, haptic, playMissSound, spawnRing, triggerShake, ringRadius2]);
 
     const doHit = useCallback((quality: HitQuality, bonusPoint = false) => {
         scoreRef.current += bonusPoint ? 2 : 1;
@@ -331,7 +341,7 @@ export function useGameLoop(topPad: number, botPad: number) {
         if (quality === "perfect") haptic("heavy");
         else if (quality === "good") haptic("medium");
         else haptic("light");
-        playSound("success");
+        playHitSound(quality, comboRef.current);
 
         const flashIntensity = reducedMotionRef.current ? 0 : (quality === "perfect" ? 0.5 : quality === "good" ? 0.3 : 0.15);
         if (flashIntensity > 0) {
@@ -359,7 +369,7 @@ export function useGameLoop(topPad: number, botPad: number) {
 
         durRef.current = Math.max(mode.minDur, durRef.current - mode.durStep);
         spawnRing(durRef.current);
-    }, [spawnRing, flashOpacity, targetScale, targetColor, targetScale2, targetColor2, updateVisualPhase, haptic, playSound, anchorX, anchorY]);
+    }, [spawnRing, flashOpacity, targetScale, targetColor, targetScale2, targetColor2, updateVisualPhase, haptic, playHitSound, anchorX, anchorY]);
 
     const beginGame = useCallback((mode: GameMode = "classic") => {
         const config = GAME_MODES[mode];
@@ -459,6 +469,7 @@ export function useGameLoop(topPad: number, botPad: number) {
                 if (livesRef.current <= 0) {
                     doGameOver();
                 } else {
+                    playMissSound();
                     flashOpacity.value = withSequence(
                         withTiming(0.2, { duration: 50 }),
                         withTiming(0, { duration: 250 })
@@ -484,7 +495,7 @@ export function useGameLoop(topPad: number, botPad: number) {
         } else {
             handleMiss();
         }
-    }, [ringRadius, ringRadius2, doHit, handleMiss, haptic, triggerShake, doGameOver, spawnRing, flashOpacity]);
+    }, [ringRadius, ringRadius2, doHit, handleMiss, haptic, triggerShake, doGameOver, spawnRing, flashOpacity, playMissSound]);
 
     useEffect(() => clearTimer, [clearTimer]);
 
