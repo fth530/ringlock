@@ -7,6 +7,7 @@ import Animated, {
     withDelay,
     withSequence,
     withRepeat,
+    cancelAnimation,
     Easing,
     interpolate,
 } from "react-native-reanimated";
@@ -54,6 +55,11 @@ function ScoreRing({ color, isNewRecord }: { color: string; isNewRecord: boolean
                 -1, true
             ));
         }
+        return () => {
+            cancelAnimation(rot);
+            cancelAnimation(glow);
+            cancelAnimation(opacity);
+        };
     }, [isNewRecord]);
     const outer = useAnimatedStyle(() => ({
         opacity: opacity.value,

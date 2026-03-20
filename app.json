@@ -35,7 +35,18 @@
     "plugins": [
       "expo-router",
       "expo-font",
-      ["expo-av", { "microphonePermission": false }]
+      [
+        "expo-av",
+        {
+          "microphonePermission": false
+        }
+      ],
+      [
+        "expo-tracking-transparency",
+        {
+          "userTrackingPermission": "Bu izin, ilgi alanlarınıza uygun reklamlar göstermek için kullanılır."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

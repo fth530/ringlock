@@ -435,8 +435,12 @@ export function useGameLoop(topPad: number, botPad: number) {
         setPhase("menu");
     }, [ringRadius, ringRadius2, clearTimer]);
 
+    const lastTapRef = useRef(0);
     const handleScreenTap = useCallback(() => {
         if (phaseRef.current !== "playing") return;
+        const now = Date.now();
+        if (now - lastTapRef.current < 80) return;
+        lastTapRef.current = now;
 
         const mode = GAME_MODES[modeRef.current];
 

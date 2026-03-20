@@ -10,6 +10,8 @@ import {
   Orbitron_700Bold,
   Orbitron_900Black,
 } from "@expo-google-fonts/orbitron";
+import { requestTrackingPermissionsAsync } from "expo-tracking-transparency";
+import { Platform } from "react-native";
 import { soundManager } from "@/lib/sounds";
 import { musicManager } from "@/lib/music";
 import { SettingsProvider, useSettings } from "@/lib/SettingsContext";
@@ -46,9 +48,12 @@ export default function RootLayout() {
   useEffect(() => {
     async function prepare() {
       try {
+        if (Platform.OS === "ios") {
+          await requestTrackingPermissionsAsync();
+        }
         await Promise.all([soundManager.init(), musicManager.init()]);
       } catch (e) {
-        console.warn(e);
+        // silent — app must always open regardless of permission outcome
       } finally {
         setAppIsReady(true);
       }

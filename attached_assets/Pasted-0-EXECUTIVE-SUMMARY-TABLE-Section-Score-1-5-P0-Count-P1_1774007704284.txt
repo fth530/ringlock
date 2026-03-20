@@ -1,0 +1,114 @@
+0. EXECUTIVE SUMMARY TABLE
+
+Section	Score (1-5)	P0 Count	P1 Count	Verdict
+Core Value & Spam	4/5	0	0	PASS
+Design & UX	4/5	0	1	PASS
+Stability & Edge Cases	4/5	0	1	PASS
+Data & Security	5/5	0	0	PASS
+Privacy & iOS Compat	1/5	1	0	FAIL
+Build & Cleanliness	4/5	0	1	PASS
+OVERALL	3.6/5	1	3	FAIL
+1. CORE VALUE, SPAM & THE 30-SECOND TEST (Guidelines 4.2 & 4.3):
+
+[30-Second Test]: Uygulama açılır açılmaz ne yapılması gerektiği anlaşılıyor. Menü, modlar ve genel UI oldukça anlaşılır.
+[Min. Functionality]: Basit bir web görünümü değil; react-native-reanimated ile native düzeyde grafik motoru ve haptik geri bildirim kullanılmış. Kural 4.2'yi (Minimum Functionality) rahat geçer.
+2. DESIGN QUALITY, UX & NAVIGATION:
+
+[Design Excellence]: "Orbitron" font kullanımı, neon renk paleti, akıcı ekran geçişleri ve özel splash ekranı ile modern, S-Sınıfı iOS standartlarında premium bir hissiyat veriyor.
+[Loading & Perf]: [P1-RISKY] 
+
+GameOverOverlay
+'deki dönen skor halkası (
+
+ScoreRing
+) sürekli sonsuz animasyon çalıştırıyor. Yüksek frekanslı UI değişimleri pil ömrünü kısaltabilir.
+[Deep Linking]: Tek ekranlı oyun döngüsü (
+
+index.tsx
+) var, gezinim çıkmaz sokak barındırmıyor.
+3. EDGE CASES, STABILITY & RESOURCE USAGE:
+
+[Stress Test]: [P1-RISKY] Ekrana çılgınlar gibi basılması (button spamming) durumunda, shakeTick ve particleTick state'leri yığılabilir. JS thread'i anlık kilitlenebilir.
+[Offline & Crash]: Cihaz çevrimdışıyken reklam (
+
+RewardedAd
+) izlenmek istendiğinde oyun çökmüyor, catch (e) bloğuna düşüp onClosed tetikliyor. Mantıklı ve güvenli tasarım.
+[Resource Usage]: Haptik motorlar (Titreşim) ve Reanimated hook'ları akıcı kullanılmış; ancak eski cihazlarda (iPhone SE) particle/parçacık efektleri kasabilir.
+4. DATA PERSISTENCE, BACKEND & SECURITY:
+
+[Persistence]: AsyncStorage kullanılarak asenkron şekilde lokal depolama yapılmış.
+[API Reliability]: Ağ tabanlı ağır işlemler bulunmuyor. Reklam API'leri Google standartlarında yönetilmiş (
+
+preloadRewardedAd
+).
+[Security]: __DEV__ durumu kontrol edilerek production ortamında gerçek ID'ler, lokal ortamda Apple ve Google onaylı "Test ID"leri kullanılmış. Şifrelenecek hassas bir veritabanı yok. Kural ihlali yok.
+5. PRIVACY, PERMISSIONS, A11Y & iOS COMPATIBILITY:
+
+[ATT & Payments]: [P0-REJECT] 
+
+app.json
+ dosyanda userTrackingUsageDescription (Bu izin size ilgi alanlarınıza uygun...) tanımlamışsın ve react-native-google-mobile-ads kullanıyorsun; ANCAK uygulamayı açılışta veya reklamlardan önce kullanıcıya App Tracking Transparency (ATT) sistem uyarısını gösteren HİÇBİR kod yazmamışsın. Apple bunu test ettiği saniye manuel olarak Reddedecek. (Guideline 5.1.2)
+[Device & A11Y]: iPhone 15 Pro dinamik adası ve iPad ekran sınırları useSafeAreaInsets ile düzgün yakalanmış. Ekran kenarlarından UI taşmıyor.
+6. BUILD CONFIG & PRODUCTION CLEANLINESS:
+
+[Versioning]: Bundle ID doğru (com.ringlock), version 1.0.0. ITSAppUsesNonExemptEncryption değeri false yapılmış, bu ihracat dökümanı takılmasını engelleyecektir.
+[Leftovers]: [P1-RISKY] 
+
+lib/ads.ts
+ ve 
+
+components/GameOverOverlay.tsx
+ içinde hatalarda konsola spam yapan console.log("Ad Failed to load:", error); mevcut. Production ortamında Apple review board debug izlerini sevmez.
+7. THE RED VERDICT & 1-SHOT FIX PRESCRIPTION: Ret İhtimali: %99 (High) İhlal: App Store Review Guideline 5.1.2 - Reklam kimliğini kullanmadan önce izin istememe. (MANDATORY ATT PROMPT EKSİĞİ)
+
+Sen benden sadece rapor isteyip işlemleri doğrudan "bana bırak" dediğin için; aşağıda kod düzeltmelerini sunuyorum ama sistemi şu an kendim güncellemiyorum. Bunu uygulamamı istersen bana onay ver, anında yazarım.
+
+📁 File: 
+
+app/_layout.tsx
+ 🔴 BEFORE (current broken code):
+
+tsx
+useEffect(() => {
+      async function prepare() {
+        try {
+          await soundManager.init();
+        } catch (e) {
+          console.warn(e);
+        } finally {
+          setAppIsReady(true);
+        }
+      }
+      prepare();
+🟢 AFTER (fixed code):
+
+tsx
+import { requestTrackingPermissionsAsync } from "expo-tracking-transparency";
+    // ...
+    useEffect(() => {
+      async function prepare() {
+        try {
+          // Apple ATT (App Tracking Transparency) Uyarısını önce patlatmak ZORUNDAYIZ
+          const { status } = await requestTrackingPermissionsAsync();
+          if (status !== 'granted') {
+             // Reddedilmiş olsa bile app açılmalı, reklamlar personal olmaz sadece
+          }
+          await soundManager.init();
+        } catch (e) {
+          // console.warn yerine production safety (Opsiyonel kaldırılmalı)
+        } finally {
+          setAppIsReady(true);
+        }
+      }
+      prepare();
+💬 Why: Apple Review ekibi, userTrackingUsageDescription tanımlı uygulamalarda sistemin native ATT promptunu ekrana fırlatmayan her uygulamayı Guideline 5.1.2'den otomatik reddeder. Bu izin isteği eklenmeden kod submit edilemez. (Not: Terminalden npx expo install expo-tracking-transparency kütüphanesini indirmemiz gerekecek).
+
+8. PRE-LAUNCH ASO & MONITORING ROADMAP:
+
+[Crash Monitoring]: App çalışıyor ama prod seviyesi bir monitoring loglama aracı (Sentry/Firebase) göze çarpmıyor. İlk gün çökmelerini kör uçuşla takip edeceksin.
+[ASO Hook]: İlk 3 saniyedeki siyah arka plan ve splash çok zarif. App Store ekran görüntülerinde Orbitron yazı tipiyle "YENİ REKOR" ve "OYUN BİTTİ" ekranlarının Neon temasını öne çıkaran ekran ekran görüntüleri (screenshot) koymalısın. Oyun Apple hakemleri için "basit ama çok temiz" hissi uyandırıyor. (ATT hatasını düzeltirsek).
+İçerikler hazır, ATT uyarısı kodlarını 
+
+app/_layout.tsx
+ dosyasına gömmek ve terminale kütüphaneyi kurmak için komut bekliyorum. Yap dersen hemen müdahale edeceğim. P1-RISKY Console.log temizliği istersen onları da uçururum. Taktik sende.
+
