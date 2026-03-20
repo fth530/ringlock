@@ -10,7 +10,6 @@ import {
   Orbitron_700Bold,
   Orbitron_900Black,
 } from "@expo-google-fonts/orbitron";
-import { requestTrackingPermissionsAsync } from "expo-tracking-transparency";
 import { Platform } from "react-native";
 import { soundManager } from "@/lib/sounds";
 import { musicManager } from "@/lib/music";
@@ -49,6 +48,7 @@ export default function RootLayout() {
     async function prepare() {
       try {
         if (Platform.OS === "ios") {
+          const { requestTrackingPermissionsAsync } = await import("expo-tracking-transparency");
           await requestTrackingPermissionsAsync();
         }
         await Promise.all([soundManager.init(), musicManager.init()]);
