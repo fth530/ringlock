@@ -4,6 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Animated, {
     useSharedValue, useAnimatedStyle, withTiming, withRepeat, withSequence, Easing,
 } from "react-native-reanimated";
+import { useTranslation } from "react-i18next";
 import { C, type GameMode } from "@/constants/game";
 
 const { width: SW } = Dimensions.get("window");
@@ -103,8 +104,14 @@ function StatCard({
 }
 
 export function ScoresOverlay({ onClose }: { onClose: () => void }) {
+    const { t } = useTranslation();
     const [stats, setStats] = useState<Stats | null>(null);
     const opacity = useSharedValue(0);
+
+    const modeLabelKey: Record<string, string> = {
+        classic: "classicLabel", hardcore: "hardcoreLabel", zen: "zenLabel",
+        speed: "speedLabel", mirror: "mirrorLabel", dual: "dualLabel",
+    };
 
     useEffect(() => {
         opacity.value = withTiming(1, { duration: 300 });
@@ -132,7 +139,7 @@ export function ScoresOverlay({ onClose }: { onClose: () => void }) {
 
     return (
         <Animated.View style={[StyleSheet.absoluteFill, sc.wrap, wrapStyle]}>
-            <Text style={sc.title}>İSTATİSTİKLER</Text>
+            <Text style={sc.title}>{t("statistics")}</Text>
             <View style={sc.separator} />
 
             <ScrollView
@@ -140,9 +147,9 @@ export function ScoresOverlay({ onClose }: { onClose: () => void }) {
                 contentContainerStyle={sc.scroll}
             >
                 {/* Mode Best Scores */}
-                <Text style={sc.sectionLabel}>MOD EN İYİ SKORLAR</Text>
+                <Text style={sc.sectionLabel}>{t("modeBestScores")}</Text>
                 <View style={sc.list}>
-                    {MODES.map(({ key, label, color, icon }) => {
+                    {MODES.map(({ key, color, icon }) => {
                         const val = stats?.scores[key] ?? 0;
                         const active = val > 0;
                         const isBest = topMode?.key === key && active;
@@ -160,9 +167,9 @@ export function ScoresOverlay({ onClose }: { onClose: () => void }) {
                                     </Text>
                                     <View>
                                         <Text style={[sc.rowLabel, { color: active ? color : "rgba(255,255,255,0.15)" }]}>
-                                            {label}
+                                            {t(modeLabelKey[key])}
                                         </Text>
-                                        <Text style={sc.rowSub}>{isBest ? "★ EN İYİ MOD" : "EN İYİ SKOR"}</Text>
+                                        <Text style={sc.rowSub}>{isBest ? t("bestMode") : t("bestScoreSmall")}</Text>
                                     </View>
                                 </View>
                                 <Text style={[sc.rowScore, { color: active ? color : "rgba(255,255,255,0.1)" }]}>
@@ -176,43 +183,43 @@ export function ScoresOverlay({ onClose }: { onClose: () => void }) {
                 {/* Lifetime stats grid */}
                 {stats && stats.totalGames > 0 && (
                     <>
-                        <Text style={[sc.sectionLabel, { marginTop: 20 }]}>YAŞAM BOYU İSTATİSTİKLER</Text>
+                        <Text style={[sc.sectionLabel, { marginTop: 20 }]}>{t("lifetimeStats")}</Text>
                         <View style={sc.statGrid}>
                             <StatCard
-                                label="OYUN"
+                                label={t("games")}
                                 value={stats.totalGames}
                                 emoji="🎮"
                                 color={C.cyan}
                             />
                             <StatCard
-                                label="TOPLAM SKOR"
+                                label={t("totalScore")}
                                 value={stats.totalScore}
                                 emoji="⭐"
                                 color={C.gold}
                             />
                             <StatCard
-                                label="ORT. SKOR"
+                                label={t("avgScore")}
                                 value={avgScore}
-                                sub="oyun başına"
+                                sub={t("perGame")}
                                 emoji="📊"
                                 color={C.purple}
                             />
                             <StatCard
-                                label="EN İYİ KOMBO"
+                                label={t("bestCombo")}
                                 value={stats.bestCombo > 0 ? `${stats.bestCombo}x` : "—"}
                                 emoji="🔗"
                                 color={C.pink}
                             />
                             <StatCard
-                                label="GÜN SERİSİ"
+                                label={t("dayStreak")}
                                 value={stats.streak > 0 ? `${stats.streak}🔥` : "—"}
                                 emoji=""
                                 color={C.gold}
                             />
                             <StatCard
-                                label="GÜNLÜK GÖREV"
+                                label={t("dailyChallengeStat")}
                                 value={stats.dailyCompleted > 0 ? stats.dailyCompleted : "—"}
-                                sub="tamamlandı"
+                                sub={t("completed")}
                                 emoji="🎯"
                                 color={C.cyan}
                             />
@@ -222,8 +229,8 @@ export function ScoresOverlay({ onClose }: { onClose: () => void }) {
 
                 {!hasAnyScore && (
                     <View style={sc.emptyWrap}>
-                        <Text style={sc.emptyText}>HENÜZ SKOR YOK</Text>
-                        <Text style={sc.emptyHint}>Bir oyun oynayarak başla!</Text>
+                        <Text style={sc.emptyText}>{t("noScoresYet")}</Text>
+                        <Text style={sc.emptyHint}>{t("startPlaying")}</Text>
                     </View>
                 )}
             </ScrollView>
@@ -234,7 +241,7 @@ export function ScoresOverlay({ onClose }: { onClose: () => void }) {
                 onPress={handleClose}
                 style={({ pressed }) => [sc.closeBtn, pressed && { opacity: 0.6 }]}
             >
-                <Text style={sc.closeText}>KAPAT</Text>
+                <Text style={sc.closeText}>{t("close")}</Text>
             </Pressable>
         </Animated.View>
     );
@@ -253,13 +260,10 @@ const sc = StyleSheet.create({
     },
     title: {
         fontFamily: "Orbitron_900Black",
-        fontSize: 20,
-        letterSpacing: 6,
+        fontSize: 22,
+        letterSpacing: 7,
         color: C.cyan,
         marginBottom: 6,
-        ...(Platform.OS === "ios"
-            ? { textShadowColor: C.cyan, textShadowRadius: 14, textShadowOffset: { width: 0, height: 0 } }
-            : {}),
     },
     separator: {
         width: 60,

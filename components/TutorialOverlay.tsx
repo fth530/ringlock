@@ -10,35 +10,24 @@ import Animated, {
     interpolate,
 } from "react-native-reanimated";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useTranslation } from "react-i18next";
 import { C } from "@/constants/game";
 
 const TUTORIAL_KEY = "ringlock_tutorial_done";
 const { width: SW, height: SH } = Dimensions.get("window");
 
-const STEPS = [
-    {
-        title: "HALKAYI İZLE",
-        desc: "Pembe halka hedef halkaya doğru küçülür.",
-        hint: "Zamanı iyi takip et",
-    },
-    {
-        title: "TAM ANDA DOKUN",
-        desc: "Halka hedefle üst üste geldiği anda ekrana dokun.",
-        hint: "Çok erken veya geç olma",
-    },
-    {
-        title: "KOMBO YAP",
-        desc: "Arka arkaya isabetler komboyu artırır ve skor katlanır.",
-        hint: "MÜKEMMEL isabetler en çok kazandırır",
-    },
-];
+const STEP_COUNT = 3;
 
-function AnimatedRingDemo({ step }: { step: number }) {
+function AnimatedRingDemo({ step, comboText, perfectText }: { step: number; comboText: string; perfectText: string }) {
     const radius = useSharedValue(90);
     const tap = useSharedValue(1);
+    const comboFlash = useSharedValue(0);
 
     useEffect(() => {
         radius.value = 90;
+        comboFlash.value = 0;
+        tap.value = 1;
+
         if (step === 0) {
             radius.value = withRepeat(
                 withSequence(
@@ -67,7 +56,26 @@ function AnimatedRingDemo({ step }: { step: number }) {
                 false
             );
         } else {
-            radius.value = 20;
+            // Combo step: halka küçülür, hedefe ulaşır, kombo yazısı parlar, tekrarlar
+            radius.value = withRepeat(
+                withSequence(
+                    withTiming(30, { duration: 1400, easing: Easing.linear }),
+                    withTiming(30, { duration: 600 }),
+                    withTiming(90, { duration: 0 })
+                ),
+                -1,
+                false
+            );
+            comboFlash.value = withRepeat(
+                withSequence(
+                    withTiming(0, { duration: 1300 }),
+                    withTiming(1, { duration: 150, easing: Easing.out(Easing.quad) }),
+                    withTiming(1, { duration: 550 }),
+                    withTiming(0, { duration: 0 })
+                ),
+                -1,
+                false
+            );
         }
     }, [step]);
 
@@ -91,10 +99,10 @@ function AnimatedRingDemo({ step }: { step: number }) {
         transform: [{ scale: interpolate(tap.value, [0.5, 1], [1.3, 1]) }],
     }));
 
-    const comboStyle = useAnimatedStyle(() => {
-        const show = step === 2 ? 1 : 0;
-        return { opacity: show };
-    });
+    const comboStyle = useAnimatedStyle(() => ({
+        opacity: comboFlash.value,
+        transform: [{ scale: interpolate(comboFlash.value, [0, 1], [0.7, 1]) }],
+    }));
 
     return (
         <View style={d.demoArea}>
@@ -107,8 +115,8 @@ function AnimatedRingDemo({ step }: { step: number }) {
             )}
             {step === 2 && (
                 <Animated.View style={[d.comboLabel, comboStyle]}>
-                    <Text style={d.comboText}>5x KOMBO!</Text>
-                    <Text style={d.comboSub}>MÜKEMMEL</Text>
+                    <Text style={d.comboText}>{comboText}</Text>
+                    <Text style={d.comboSub}>{perfectText}</Text>
                 </Animated.View>
             )}
         </View>
@@ -129,8 +137,15 @@ function StepDots({ total, current }: { total: number; current: number }) {
 }
 
 export function TutorialOverlay({ onDone }: { onDone: () => void }) {
+    const { t } = useTranslation();
     const [step, setStep] = useState(0);
     const opacity = useSharedValue(0);
+
+    const STEPS = [
+        { title: t("tutorialStep1Title"), desc: t("tutorialStep1Desc"), hint: t("tutorialStep1Hint") },
+        { title: t("tutorialStep2Title"), desc: t("tutorialStep2Desc"), hint: t("tutorialStep2Hint") },
+        { title: t("tutorialStep3Title"), desc: t("tutorialStep3Desc"), hint: t("tutorialStep3Hint") },
+    ];
 
     useEffect(() => {
         opacity.value = withTiming(1, { duration: 400 });
@@ -139,7 +154,7 @@ export function TutorialOverlay({ onDone }: { onDone: () => void }) {
     const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
     function handleNext() {
-        if (step < STEPS.length - 1) {
+        if (step < STEP_COUNT - 1) {
             setStep((s) => s + 1);
         } else {
             handleFinish();
@@ -153,30 +168,43 @@ export function TutorialOverlay({ onDone }: { onDone: () => void }) {
     }
 
     const current = STEPS[step];
-    const isLast = step === STEPS.length - 1;
+    const isLast = step === STEP_COUNT - 1;
 
     return (
         <Animated.View style={[StyleSheet.absoluteFill, d.wrap, style]}>
             <View style={d.card}>
-                <Text style={d.stepCount}>ADIM {step + 1} / {STEPS.length}</Text>
+                <Text style={d.stepCount}>{t("stepCount", { current: step + 1, total: STEP_COUNT })}</Text>
 
-                <AnimatedRingDemo step={step} />
+                <AnimatedRingDemo step={step} comboText={t("comboDemo")} perfectText={t("perfect")} />
 
                 <Text style={d.title}>{current.title}</Text>
                 <Text style={d.desc}>{current.desc}</Text>
                 <Text style={d.hint}>{current.hint}</Text>
 
-                <StepDots total={STEPS.length} current={step} />
+                <StepDots total={STEP_COUNT} current={step} />
 
-                <Pressable
-                    onPress={handleNext}
-                    style={({ pressed }) => [d.btn, pressed && { opacity: 0.7 }]}
-                >
-                    <Text style={d.btnText}>{isLast ? "OYNAMAYA BAŞLA" : "SONRAKI"}</Text>
-                </Pressable>
+                <View style={d.navRow}>
+                    {step > 0 ? (
+                        <Pressable
+                            onPress={() => setStep((s) => s - 1)}
+                            style={({ pressed }) => [d.backBtn, pressed && { opacity: 0.7 }]}
+                        >
+                            <Text style={d.backBtnText}>{t("back")}</Text>
+                        </Pressable>
+                    ) : (
+                        <View style={d.backPlaceholder} />
+                    )}
+
+                    <Pressable
+                        onPress={handleNext}
+                        style={({ pressed }) => [d.btn, pressed && { opacity: 0.7 }]}
+                    >
+                        <Text style={d.btnText} numberOfLines={1}>{isLast ? t("start") : t("next")}</Text>
+                    </Pressable>
+                </View>
 
                 <Pressable onPress={handleFinish} style={d.skip}>
-                    <Text style={d.skipText}>Geç</Text>
+                    <Text style={d.skipText}>{t("skip")}</Text>
                 </Pressable>
             </View>
         </Animated.View>
@@ -190,7 +218,7 @@ export async function shouldShowTutorial(): Promise<boolean> {
 
 const d = StyleSheet.create({
     wrap: {
-        backgroundColor: "rgba(3,3,16,0.97)",
+        backgroundColor: "rgba(3,3,16,1)",
         alignItems: "center",
         justifyContent: "center",
         zIndex: 200,
@@ -301,12 +329,35 @@ const d = StyleSheet.create({
     dotActive: {
         backgroundColor: C.cyan,
     },
+    navRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        marginBottom: 14,
+    },
+    backBtn: {
+        borderWidth: 1.5,
+        borderColor: `${C.cyan}50`,
+        borderRadius: 10,
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+    },
+    backBtnText: {
+        fontFamily: "Orbitron_700Bold",
+        fontSize: 12,
+        letterSpacing: 3,
+        color: C.cyan,
+    },
+    backPlaceholder: {
+        width: 0,
+    },
     btn: {
+        flex: 1,
         backgroundColor: C.cyan,
         borderRadius: 10,
         paddingHorizontal: 36,
         paddingVertical: 16,
-        marginBottom: 14,
+        alignItems: "center",
     },
     btnText: {
         fontFamily: "Orbitron_900Black",

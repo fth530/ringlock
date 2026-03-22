@@ -10,19 +10,21 @@ import {
   Orbitron_700Bold,
   Orbitron_900Black,
 } from "@expo-google-fonts/orbitron";
-import { Platform } from "react-native";
+import { Platform, AppState } from "react-native";
 import { soundManager } from "@/lib/sounds";
 import { musicManager } from "@/lib/music";
 import { SettingsProvider, useSettings } from "@/lib/SettingsContext";
 import { ThemeProvider } from "@/lib/ThemeContext";
+import { initI18n } from "@/lib/i18n";
 
 SplashScreen.preventAutoHideAsync();
 
 function MusicController() {
-  const { musicEnabled } = useSettings();
+  const { musicEnabled, loaded } = useSettings();
   useEffect(() => {
+    if (!loaded) return; // Ayarlar yüklenene kadar müziği başlatma
     musicManager.setEnabled(musicEnabled);
-  }, [musicEnabled]);
+  }, [musicEnabled, loaded]);
   return null;
 }
 
@@ -47,11 +49,7 @@ export default function RootLayout() {
   useEffect(() => {
     async function prepare() {
       try {
-        if (Platform.OS === "ios") {
-          const { requestTrackingPermissionsAsync } = await import("expo-tracking-transparency");
-          await requestTrackingPermissionsAsync();
-        }
-        await Promise.all([soundManager.init(), musicManager.init()]);
+        await Promise.all([soundManager.init(), musicManager.init(), initI18n()]);
       } catch (e) {
         // silent — app must always open regardless of permission outcome
       } finally {
@@ -61,7 +59,13 @@ export default function RootLayout() {
 
     prepare();
 
+    const appStateSub = AppState.addEventListener("change", (state) => {
+      if (state === "background") musicManager.pause();
+      else if (state === "active") musicManager.play();
+    });
+
     return () => {
+      appStateSub.remove();
       soundManager.release();
       musicManager.release();
     };

@@ -9,6 +9,7 @@ import Animated, {
     Easing,
 } from "react-native-reanimated";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useTranslation } from "react-i18next";
 import { C } from "@/constants/game";
 
 const { width: SW } = Dimensions.get("window");
@@ -145,22 +146,16 @@ export function ModeIntroOverlay({
         setTimeout(onDone, 300);
     }
 
+    const { t } = useTranslation();
+
     const isMirror = mode === "mirror";
     const accentColor = isMirror ? "#00BFFF" : "#FF0066";
 
-    const title       = isMirror ? "AYNA MODU"   : "İKİZ MODU";
-    const subtitle    = isMirror ? "Tersine Mekanik" : "Çift Halka";
+    const title       = isMirror ? t("mirrorModeTitle") : t("dualModeTitle");
+    const subtitle    = isMirror ? t("mirrorSubtitle")  : t("dualSubtitle");
     const lines       = isMirror
-        ? [
-            "Halka büyür — küçülmez!",
-            "Merkezdeki noktadan dışa doğru genişleyen halkayı hedefle tam örtüştüğünde yakala.",
-            "Geçerse kaçırdın sayılır.",
-          ]
-        : [
-            "Aynı anda iki halka belirir.",
-            "Pembe (①) ve kırmızı (②) halkalar farklı hızda küçülür.",
-            "Her ikisini de hedefe kilitleyince dokunursan +2 puan kazanırsın!",
-          ];
+        ? [t("mirrorLine1"), t("mirrorLine2"), t("mirrorLine3")]
+        : [t("dualLine1"), t("dualLine2"), t("dualLine3")];
 
     return (
         <Animated.View style={[StyleSheet.absoluteFill, d.wrap, wrapStyle]}>
@@ -193,7 +188,7 @@ export function ModeIntroOverlay({
                         pressed && { opacity: 0.75, transform: [{ scale: 0.97 }] },
                     ]}
                 >
-                    <Text style={d.btnText}>ANLADIM, OYNA ▶</Text>
+                    <Text style={d.btnText}>{t("understood")}</Text>
                 </Pressable>
             </View>
         </Animated.View>
@@ -202,7 +197,7 @@ export function ModeIntroOverlay({
 
 const d = StyleSheet.create({
     wrap: {
-        backgroundColor: "rgba(3,3,16,0.97)",
+        backgroundColor: "rgba(3,3,16,1)",
         alignItems: "center",
         justifyContent: "center",
         zIndex: 200,

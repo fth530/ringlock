@@ -10,6 +10,7 @@ import Animated, {
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 
 import { C, HitQuality, GameMode, GAME_MODES } from "@/constants/game";
 import { useGameLoop } from "@/hooks/useGameLoop";
@@ -27,14 +28,17 @@ import { TutorialOverlay, shouldShowTutorial } from "@/components/TutorialOverla
 import { ModeIntroOverlay, shouldShowModeIntro } from "@/components/ModeIntroOverlay";
 import { ThemeOverlay } from "@/components/ThemeOverlay";
 import { DailyChallengeOverlay } from "@/components/DailyChallengeOverlay";
+import { LanguageSelectOverlay } from "@/components/LanguageSelectOverlay";
 import { useTheme } from "@/lib/ThemeContext";
 import { useSettings } from "@/lib/SettingsContext";
+import { hasCompletedOnboarding, markOnboardingDone } from "@/lib/i18n";
 
 // ─── Hit Quality Label ────────────────────────────────────────────────────────
 function HitQualityLabel({ quality }: { quality: HitQuality }) {
   const opacity = useSharedValue(0);
   const scale = useSharedValue(0.5);
   const { largeText, highContrast } = useSettings();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (quality) {
@@ -57,7 +61,7 @@ function HitQualityLabel({ quality }: { quality: HitQuality }) {
   if (!quality) return null;
 
   const label =
-    quality === "perfect" ? "MÜKEMMEL" : quality === "good" ? "İYİ" : "GEÇ";
+    quality === "perfect" ? t("perfect") : quality === "good" ? t("good") : t("late");
   const color =
     quality === "perfect" ? C.gold : quality === "good" ? C.cyan : C.pink;
   const fontSize = largeText ? 40 : 28;
@@ -73,6 +77,7 @@ function HitQualityLabel({ quality }: { quality: HitQuality }) {
 function ComboCounter({ combo }: { combo: number }) {
   const scale = useSharedValue(1);
   const { largeText } = useSettings();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (combo > 1) {
@@ -90,7 +95,7 @@ function ComboCounter({ combo }: { combo: number }) {
   if (combo < 2) return null;
   const comboColor = combo >= 10 ? C.gold : combo >= 5 ? C.pink : C.cyan;
   const comboLabel =
-    combo >= 10 ? "İNANILMAZ" : combo >= 5 ? "HARİKA" : combo >= 3 ? "İYİ" : "";
+    combo >= 10 ? t("amazing") : combo >= 5 ? t("great") : combo >= 3 ? t("good") : "";
   const fontSize = largeText ? 42 : 32;
   const multiplier = combo >= 20 ? 4 : combo >= 10 ? 3 : combo >= 5 ? 2 : 1;
 
@@ -155,6 +160,7 @@ export default function GameScreen() {
   const botPad = Platform.OS === "web" ? Math.max(insets.bottom, 34) : insets.bottom;
   const { activeRing, activeBg } = useTheme();
   const { largeText, highContrast } = useSettings();
+  const { t } = useTranslation();
   const [showSettings, setShowSettings] = useState(false);
   const [showModeSelect, setShowModeSelect] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
@@ -163,6 +169,7 @@ export default function GameScreen() {
   const [showTheme, setShowTheme] = useState(false);
   const [showDailyChallenge, setShowDailyChallenge] = useState(false);
   const [showModeIntro, setShowModeIntro] = useState<"mirror" | "dual" | null>(null);
+  const [showLangSelect, setShowLangSelect] = useState(false);
   const pendingModeRef = useRef<GameMode | null>(null);
 
   const {
@@ -179,8 +186,11 @@ export default function GameScreen() {
 
   const [toastIndex, setToastIndex] = useState(0);
 
-  // Check if tutorial should be shown on first launch
+  // Check if language onboarding + tutorial should be shown on first launch
   useEffect(() => {
+    hasCompletedOnboarding().then((done) => {
+      if (!done) setShowLangSelect(true);
+    });
     shouldShowTutorial().then((show) => {
       if (show) setShowTutorial(true);
     });
@@ -221,6 +231,7 @@ export default function GameScreen() {
   }));
 
   return (
+    <View style={s.shakeWrapper}>
     <Animated.View style={[s.root, shakeStyle]}>
       <StatusBar style="light" />
 
@@ -262,7 +273,7 @@ export default function GameScreen() {
               style={({ pressed }) => [s.quitBtn, { borderColor: `${getModeColor(gameMode)}40` }, pressed && { opacity: 0.5 }]}
             >
               <Text style={[s.quitIcon, { color: getModeColor(gameMode) }]}>←</Text>
-              <Text style={[s.quitLabel, { color: getModeColor(gameMode) }]}>CIK</Text>
+              <Text style={[s.quitLabel, { color: getModeColor(gameMode) }]}>{t("quit")}</Text>
             </Pressable>
           ) : (
             <Text style={[s.modeBadgeText, { color: getModeColor(gameMode) }]}>
@@ -279,12 +290,12 @@ export default function GameScreen() {
           pointerEvents="none"
         >
           <View style={s.scoreBox}>
-            <Text style={s.scoreLabel}>SKOR</Text>
+            <Text style={s.scoreLabel}>{t("scoreLabel")}</Text>
             <Text style={[s.scoreValue, largeText && { fontSize: 58, lineHeight: 64 }, highContrast && { color: "#FFFFFF" }]}>{score}</Text>
             {bestScore > 0 && (
               <>
                 <View style={s.scoreDivider} />
-                <Text style={[s.bestInline, highContrast && { color: "rgba(255,255,255,0.6)" }]}>EN İYİ  {bestScore}</Text>
+                <Text style={[s.bestInline, highContrast && { color: "rgba(255,255,255,0.6)" }]}>{t("bestInline", { score: bestScore })}</Text>
               </>
             )}
           </View>
@@ -305,12 +316,13 @@ export default function GameScreen() {
           ringRadius={ringRadius}
           targetScale={targetScale}
           targetColor={targetColor}
-          ringColor={activeRing.color}
+          ringColor={isDualMode ? C.cyan : activeRing.color}
+          targetBaseColor={isDualMode ? C.cyan : undefined}
           thick={highContrast}
         />
       )}
 
-      {/* Secondary ring (dual mode only) — pembe/kırmızı ile görsel ayrım */}
+      {/* Secondary ring (dual mode only) — mavi/kirmizi ile gorsel ayrim */}
       {showRings && isDualMode && (
         <RingsAnchor
           anchorX={anchorX2}
@@ -369,7 +381,13 @@ export default function GameScreen() {
 
       {/* Settings overlay */}
       {showSettings && (
-        <SettingsOverlay onClose={() => setShowSettings(false)} />
+        <SettingsOverlay
+          onClose={() => setShowSettings(false)}
+          onLanguage={() => {
+            setShowSettings(false);
+            setTimeout(() => setShowLangSelect(true), 250);
+          }}
+        />
       )}
 
       {/* Scores overlay */}
@@ -410,7 +428,19 @@ export default function GameScreen() {
       {showDailyChallenge && (
         <DailyChallengeOverlay onClose={() => setShowDailyChallenge(false)} />
       )}
+
+      {/* Language select overlay — onboarding */}
+      {showLangSelect && (
+        <LanguageSelectOverlay
+          isOnboarding
+          onDone={() => {
+            markOnboardingDone();
+            setShowLangSelect(false);
+          }}
+        />
+      )}
     </Animated.View>
+    </View>
   );
 }
 
@@ -426,7 +456,8 @@ function getModeColor(mode: GameMode): string {
 }
 
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: C.bg },
+  shakeWrapper: { flex: 1, backgroundColor: C.bg },
+  root: { flex: 1, backgroundColor: C.bg, overflow: "hidden" },
   scoreArea: {
     position: "absolute",
     top: 0,

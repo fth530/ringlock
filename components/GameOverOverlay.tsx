@@ -12,6 +12,7 @@ import Animated, {
     interpolate,
 } from "react-native-reanimated";
 import { C, GameMode, GAME_MODES } from "@/constants/game";
+import { useTranslation } from "react-i18next";
 
 const { width: SW } = Dimensions.get("window");
 const CARD_W = SW - 48;
@@ -83,7 +84,7 @@ function ScoreRing({ color, isNewRecord }: { color: string; isNewRecord: boolean
     );
 }
 
-function ScoreReveal({ value, color }: { value: number; color: string }) {
+function ScoreReveal({ value, color, label }: { value: number; color: string; label: string }) {
     const scale = useSharedValue(0.3);
     const opacity = useSharedValue(0);
     useEffect(() => {
@@ -100,7 +101,7 @@ function ScoreReveal({ value, color }: { value: number; color: string }) {
     return (
         <Animated.View style={[s.scoreCenter, style]}>
             <Text style={[s.bigScore, { color }]}>{value}</Text>
-            <Text style={s.scoreUnit}>PUAN</Text>
+            <Text style={s.scoreUnit}>{label}</Text>
         </Animated.View>
     );
 }
@@ -124,6 +125,7 @@ export function GameOverOverlay({
     onRestart: () => void;
     onMenu: () => void;
 }) {
+    const { t } = useTranslation();
     const bg = useSharedValue(0);
     const recordScale = useSharedValue(0);
     useEffect(() => {
@@ -146,7 +148,7 @@ export function GameOverOverlay({
 
                 {/* ── Header ── */}
                 <FadeSlide delay={0}>
-                    <Text style={s.titleText}>OYUN BITTI</Text>
+                    <Text style={s.titleText}>{t("gameOver")}</Text>
                 </FadeSlide>
 
                 {/* ── Mode pill ── */}
@@ -162,7 +164,7 @@ export function GameOverOverlay({
                 {/* ── Score circle area ── */}
                 <View style={s.scoreArea}>
                     <ScoreRing color={modeColor} isNewRecord={isNewRecord} />
-                    <ScoreReveal value={score} color={modeColor} />
+                    <ScoreReveal value={score} color={modeColor} label={t("points")} />
                 </View>
 
                 {/* ── New record ── */}
@@ -170,8 +172,8 @@ export function GameOverOverlay({
                     <Animated.View style={[s.newRecordWrap, recordStyle]}>
                         <Text style={s.newRecordStar}>★</Text>
                         <View style={s.newRecordInner}>
-                            <Text style={s.newRecordLabel}>YENİ REKOR</Text>
-                            <Text style={s.newRecordSub}>Tebrikler!</Text>
+                            <Text style={s.newRecordLabel}>{t("newRecord")}</Text>
+                            <Text style={s.newRecordSub}>{t("congratulations")}</Text>
                         </View>
                         <Text style={s.newRecordStar}>★</Text>
                     </Animated.View>
@@ -179,12 +181,12 @@ export function GameOverOverlay({
 
                 {/* ── Stats card ── */}
                 <FadeSlide delay={550}>
-                    <View style={s.statsCard}>
-                        <View style={s.statItem}>
+                    <View style={[s.statsCard, !(maxCombo != null && maxCombo > 1) && s.statsCardCentered]}>
+                        <View style={[s.statItem, !(maxCombo != null && maxCombo > 1) && s.statItemCentered]}>
                             <Text style={s.statIcon}>🏆</Text>
-                            <View>
+                            <View style={!(maxCombo != null && maxCombo > 1) ? { alignItems: "center" } : undefined}>
                                 <Text style={s.statValue}>{bestScore}</Text>
-                                <Text style={s.statKey}>EN IYI SKOR</Text>
+                                <Text style={s.statKey}>{t("bestScoreLabel")}</Text>
                             </View>
                         </View>
                         {maxCombo != null && maxCombo > 1 && (
@@ -194,7 +196,7 @@ export function GameOverOverlay({
                                     <Text style={s.statIcon}>🔥</Text>
                                     <View>
                                         <Text style={s.statValue}>{maxCombo}x</Text>
-                                        <Text style={s.statKey}>MAKS KOMBO</Text>
+                                        <Text style={s.statKey}>{t("maxCombo")}</Text>
                                     </View>
                                 </View>
                             </>
@@ -217,7 +219,7 @@ export function GameOverOverlay({
                             ]}
                         >
                             <Text style={s.primaryBtnIcon}>↻</Text>
-                            <Text style={s.primaryBtnText}>TEKRAR OYNA</Text>
+                            <Text style={s.primaryBtnText}>{t("playAgain")}</Text>
                         </Pressable>
 
                         {/* Secondary row */}
@@ -227,13 +229,13 @@ export function GameOverOverlay({
                                 accessibilityLabel="Share Score"
                                 onPress={() => {
                                     const mt = gameMode !== "classic" ? ` [${GAME_MODES[gameMode].label}]` : "";
-                                    const ct = maxCombo && maxCombo > 1 ? ` | Kombo: ${maxCombo}x` : "";
-                                    Share.share({ message: `RingLock${mt} - ${score} puan!${ct} Sen de dene!` });
+                                    const ct = maxCombo && maxCombo > 1 ? t("comboText", { combo: maxCombo }) : "";
+                                    Share.share({ message: t("shareMessage", { mode: mt, score, combo: ct }) });
                                 }}
                                 style={({ pressed }) => [s.secBtn, pressed && { opacity: 0.6 }]}
                             >
                                 <Text style={s.secBtnIcon}>↗</Text>
-                                <Text style={s.secBtnText}>PAYLAS</Text>
+                                <Text style={s.secBtnText}>{t("share")}</Text>
                             </Pressable>
 
                             <Pressable
@@ -243,7 +245,7 @@ export function GameOverOverlay({
                                 style={({ pressed }) => [s.secBtn, pressed && { opacity: 0.6 }]}
                             >
                                 <Text style={s.secBtnIcon}>⌂</Text>
-                                <Text style={s.secBtnText}>ANA MENU</Text>
+                                <Text style={s.secBtnText}>{t("mainMenu")}</Text>
                             </Pressable>
                         </View>
                     </View>
@@ -388,6 +390,13 @@ const s = StyleSheet.create({
         alignItems: "center",
         gap: 10,
         flex: 1,
+    },
+    statsCardCentered: {
+        justifyContent: "center",
+    },
+    statItemCentered: {
+        flex: 0,
+        justifyContent: "center",
     },
     statIcon: {
         fontSize: 22,

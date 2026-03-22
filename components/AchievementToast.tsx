@@ -51,25 +51,17 @@ export function AchievementToast({
 const s = StyleSheet.create({
     toast: {
         position: "absolute",
-        top: 100,
+        top: 54,
         left: 30,
         right: 30,
-        backgroundColor: "rgba(0,255,232,0.08)",
+        backgroundColor: "rgba(3,3,16,0.95)",
         borderWidth: 1,
-        borderColor: C.gold,
+        borderColor: "rgba(0,255,232,0.15)",
         borderRadius: 6,
         paddingVertical: 14,
         paddingHorizontal: 20,
         alignItems: "center",
-        zIndex: 100,
-        ...(Platform.OS === "ios"
-            ? {
-                shadowColor: C.gold,
-                shadowRadius: 16,
-                shadowOpacity: 0.5,
-                shadowOffset: { width: 0, height: 0 },
-            }
-            : {}),
+        zIndex: 300,
     },
     icon: {
         fontSize: 24,

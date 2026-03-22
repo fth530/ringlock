@@ -16,7 +16,7 @@ import { useSettings } from "@/lib/SettingsContext";
 import { checkAchievements, updateLifetimeStats, type Achievement, type GameStats } from "@/lib/achievements";
 import {
     Phase, HitQuality, GameMode, GAME_MODES,
-    SCREEN_W, SCREEN_H, TARGET_R, MAX_R, TOLERANCE, EDGE_PAD,
+    SCREEN_W, SCREEN_H, TARGET_R, MAX_R, MIRROR_MAX_R, TOLERANCE, EDGE_PAD,
     PERFECT_THRESHOLD, GOOD_THRESHOLD,
     MAX_LIVES, COMBO_FOR_EXTRA_LIFE,
 } from "@/constants/game";
@@ -219,10 +219,10 @@ export function useGameLoop(topPad: number, botPad: number) {
         anchorY.value = pos.y;
 
         if (mode.isMirror) {
-            // Ring grows from 0 → MAX_R; miss when it overshoots (animation completes)
+            // Ring grows from 0 → MIRROR_MAX_R; miss when it overshoots
             ringRadius.value = 0;
             ringRadius.value = withTiming(
-                MAX_R,
+                MIRROR_MAX_R,
                 { duration: dur, easing: Easing.linear },
                 (done) => { if (done) runOnJS(handleMiss)(); }
             );
@@ -238,15 +238,14 @@ export function useGameLoop(topPad: number, botPad: number) {
 
         if (mode.isDual) {
             dualMissedRef.current = false;
+            // Two rings at different positions but SAME speed — fair timing
             const pos2 = randomTargetPos(topPad, botPad);
             anchorX2.value = pos2.x;
             anchorY2.value = pos2.y;
-            // Second ring is 20% faster for extra challenge
-            const dur2 = Math.max(mode.minDur, Math.round(dur * 0.8));
             ringRadius2.value = MAX_R;
             ringRadius2.value = withTiming(
                 0,
-                { duration: dur2, easing: Easing.linear },
+                { duration: dur, easing: Easing.linear },
                 (done) => { if (done) runOnJS(handleDualAutoMiss)(); }
             );
         }
@@ -454,8 +453,9 @@ export function useGameLoop(topPad: number, botPad: number) {
 
             const diff1 = Math.abs(r1 - TARGET_R);
             const diff2 = Math.abs(r2 - TARGET_R);
-            const hit1 = diff1 <= TOLERANCE;
-            const hit2 = diff2 <= TOLERANCE;
+            const dualTolerance = TOLERANCE * 1.4; // dual modda biraz daha genis vuruş penceresi
+            const hit1 = diff1 <= dualTolerance;
+            const hit2 = diff2 <= dualTolerance;
 
             if (hit1 || hit2) {
                 const bestDiff = (hit1 && hit2) ? Math.min(diff1, diff2) : hit1 ? diff1 : diff2;

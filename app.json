@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.ringlock",
+      "bundleIdentifier": "com.corut.ringlock",
       "buildNumber": "1",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -41,12 +41,7 @@
           "microphonePermission": false
         }
       ],
-      [
-        "expo-tracking-transparency",
-        {
-          "userTrackingPermission": "Bu izin, ilgi alanlarınıza uygun reklamlar göstermek için kullanılır."
-        }
-      ]
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true,

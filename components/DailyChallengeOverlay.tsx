@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable, Dimensions } from "react-native";
 import Animated, {
     useSharedValue, useAnimatedStyle, withTiming, withRepeat, withSequence, Easing,
 } from "react-native-reanimated";
+import { useTranslation } from "react-i18next";
 import { C } from "@/constants/game";
 import { generateDailyChallenge, getDailyChallengeResult, DailyChallenge } from "@/lib/dailyChallenge";
 import { getStreakInfo, StreakInfo } from "@/lib/streak";
@@ -10,14 +11,14 @@ import { getStreakInfo, StreakInfo } from "@/lib/streak";
 const { width: SW } = Dimensions.get("window");
 const CARD_W = Math.min(SW - 48, 340);
 
-function timeUntilMidnight(): string {
+function timeUntilMidnight(t: (key: string, opts?: any) => string): string {
     const now = new Date();
     const midnight = new Date(now);
     midnight.setHours(24, 0, 0, 0);
     const diff = midnight.getTime() - now.getTime();
     const h = Math.floor(diff / 3600000);
     const m = Math.floor((diff % 3600000) / 60000);
-    return `${h}s ${m}dk`;
+    return t("timeFormat", { h, m });
 }
 
 function StreakDisplay({ info }: { info: StreakInfo }) {
@@ -39,22 +40,24 @@ function StreakDisplay({ info }: { info: StreakInfo }) {
 
     const flameEmoji = info.streak >= 30 ? "🌟" : info.streak >= 7 ? "🔥" : "⚡";
 
+    const { t } = useTranslation();
+
     return (
         <View style={dc.streakBox}>
             <Animated.View style={[dc.streakInner, style]}>
                 <Text style={dc.streakEmoji}>{flameEmoji}</Text>
                 <Text style={dc.streakNum}>{info.streak}</Text>
-                <Text style={dc.streakLabel}>GÜN SERİ</Text>
+                <Text style={dc.streakLabel}>{t("streakLabel")}</Text>
             </Animated.View>
             {info.playedToday && (
-                <Text style={dc.playedToday}>✓ Bugün oynadın</Text>
+                <Text style={dc.playedToday}>{t("playedToday")}</Text>
             )}
             {!info.playedToday && info.streak > 0 && (
-                <Text style={dc.streakWarning}>Seriyi kırmamak için bugün oyna!</Text>
+                <Text style={dc.streakWarning}>{t("streakWarning")}</Text>
             )}
             {info.streak >= 7 && (
                 <Text style={dc.streakMilestone}>
-                    {info.streak >= 30 ? "🌟 30 Gün Efsanesi!" : "🔥 7 Günlük Seri!"}
+                    {info.streak >= 30 ? t("streak30") : t("streak7")}
                 </Text>
             )}
         </View>
@@ -82,11 +85,10 @@ function ChallengeCard({ challenge, completed }: { challenge: DailyChallenge; co
             : `rgba(255,215,0,${0.2 + borderPulse.value * 0.25})`,
     }));
 
-    const modeLabels: Record<string, string> = {
-        classic: "CLASSIC",
-        hardcore: "HARDCORE",
-        zen: "ZEN",
-        speed: "SPEED RUSH",
+    const { t } = useTranslation();
+    const modeLabelKey: Record<string, string> = {
+        classic: "classicLabel", hardcore: "hardcoreLabel",
+        zen: "zenLabel", speed: "speedLabel",
     };
 
     return (
@@ -102,15 +104,15 @@ function ChallengeCard({ challenge, completed }: { challenge: DailyChallenge; co
 
             {challenge.type === "score" && (
                 <View style={dc.modeTag}>
-                    <Text style={dc.modeTagText}>{modeLabels[challenge.mode] ?? challenge.mode}</Text>
+                    <Text style={dc.modeTagText}>{t(modeLabelKey[challenge.mode] ?? "classicLabel")}</Text>
                 </View>
             )}
 
             <View style={dc.challengeFooter}>
                 {completed ? (
-                    <Text style={dc.completedText}>TAMAMLANDI!</Text>
+                    <Text style={dc.completedText}>{t("challengeCompleted")}</Text>
                 ) : (
-                    <Text style={dc.timeLeft}>Kalan süre: {timeUntilMidnight()}</Text>
+                    <Text style={dc.timeLeft}>{t("timeLeft", { time: timeUntilMidnight(t) })}</Text>
                 )}
             </View>
         </Animated.View>
@@ -118,6 +120,7 @@ function ChallengeCard({ challenge, completed }: { challenge: DailyChallenge; co
 }
 
 export function DailyChallengeOverlay({ onClose }: { onClose: () => void }) {
+    const { t } = useTranslation();
     const [challenge, setChallenge] = useState<DailyChallenge | null>(null);
     const [completed, setCompleted] = useState(false);
     const [streakInfo, setStreakInfo] = useState<StreakInfo>({ streak: 0, lastPlayDate: "", playedToday: false });
@@ -141,7 +144,7 @@ export function DailyChallengeOverlay({ onClose }: { onClose: () => void }) {
     return (
         <Animated.View style={[StyleSheet.absoluteFill, dc.wrap, style]}>
             <View style={dc.container}>
-                <Text style={dc.title}>GÜNLÜK GÖREV</Text>
+                <Text style={dc.title}>{t("dailyChallengeTitle")}</Text>
                 <View style={dc.sep} />
 
                 <StreakDisplay info={streakInfo} />
@@ -151,14 +154,14 @@ export function DailyChallengeOverlay({ onClose }: { onClose: () => void }) {
                 {challenge && <ChallengeCard challenge={challenge} completed={completed} />}
 
                 <Text style={dc.hint}>
-                    Her gün farklı bir görev • Tamamlamak için oyna
+                    {t("dailyHint")}
                 </Text>
 
                 <Pressable
                     onPress={handleClose}
                     style={({ pressed }) => [dc.closeBtn, pressed && { opacity: 0.6 }]}
                 >
-                    <Text style={dc.closeBtnText}>KAPAT</Text>
+                    <Text style={dc.closeBtnText}>{t("close")}</Text>
                 </Pressable>
             </View>
         </Animated.View>
@@ -167,7 +170,7 @@ export function DailyChallengeOverlay({ onClose }: { onClose: () => void }) {
 
 const dc = StyleSheet.create({
     wrap: {
-        backgroundColor: "rgba(3,3,16,0.97)",
+        backgroundColor: "rgba(3,3,16,1)",
         alignItems: "center",
         justifyContent: "center",
         zIndex: 150,
@@ -178,9 +181,9 @@ const dc = StyleSheet.create({
     },
     title: {
         fontFamily: "Orbitron_900Black",
-        fontSize: 18,
-        letterSpacing: 6,
-        color: C.gold,
+        fontSize: 22,
+        letterSpacing: 7,
+        color: C.cyan,
         marginBottom: 16,
     },
     sep: {

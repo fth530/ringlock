@@ -11,6 +11,7 @@ import Animated, {
     interpolate,
 } from "react-native-reanimated";
 import { C } from "@/constants/game";
+import { useTranslation } from "react-i18next";
 
 // ─── Subtle rotating rings ───────────────────────────────────────────────────
 function DecoRings() {
@@ -96,28 +97,57 @@ export function MainMenu({
     topPad: number;
     botPad: number;
 }) {
+    const { t } = useTranslation();
+
     return (
         <View style={[StyleSheet.absoluteFill, s.wrap]}>
             <DecoRings />
 
-            <View style={[s.content, { paddingTop: topPad + 80, paddingBottom: botPad + 20 }]}>
+            <View style={[s.content, { paddingTop: topPad + 60, paddingBottom: botPad + 16 }]}>
 
                 {/* Title */}
                 <FadeIn delay={0}>
                     <View style={s.titleGroup}>
-                        <Text style={s.title}>RINGLOCK</Text>
+                        <Text style={s.title}>{t("appTitle")}</Text>
                         <View style={s.tagRow}>
                             <View style={s.tagLine} />
-                            <Text style={s.tagText}>ZAMANLAMA OYUNU</Text>
+                            <Text style={s.tagText}>{t("subtitle")}</Text>
                             <View style={s.tagLine} />
                         </View>
+                    </View>
+                </FadeIn>
+
+                {/* Top stats row: Achievements & Scores */}
+                <FadeIn delay={100}>
+                    <View style={s.topStatsRow}>
+                        <Pressable
+                            accessibilityRole="button"
+                            accessibilityLabel="View Achievements"
+                            onPress={onAchievements}
+                            style={({ pressed }) => [s.topStatBtn, pressed && { opacity: 0.6 }]}
+                        >
+                            <Text style={s.topStatEmoji}>🏅</Text>
+                            <Text style={[s.topStatLabel, { color: C.gold }]}>{t("achievements")}</Text>
+                        </Pressable>
+
+                        <View style={s.topStatDivider} />
+
+                        <Pressable
+                            accessibilityRole="button"
+                            accessibilityLabel="View Scores"
+                            onPress={onScores}
+                            style={({ pressed }) => [s.topStatBtn, pressed && { opacity: 0.6 }]}
+                        >
+                            <Text style={s.topStatEmoji}>🏆</Text>
+                            <Text style={[s.topStatLabel, { color: C.cyan }]}>{t("scores")}</Text>
+                        </Pressable>
                     </View>
                 </FadeIn>
 
                 <View style={s.spacer} />
 
                 {/* Play button */}
-                <FadeIn delay={150}>
+                <FadeIn delay={200}>
                     <View style={s.playGroup}>
                         <Pressable
                             accessibilityRole="button"
@@ -126,7 +156,7 @@ export function MainMenu({
                             style={({ pressed }) => [s.playBtn, pressed && s.playPressed]}
                         >
                             <View style={s.playBg}>
-                                <Text style={s.playText}>OYNA</Text>
+                                <Text style={s.playText}>{t("play")}</Text>
                             </View>
                             <View style={[s.c, s.cTL]} />
                             <View style={[s.c, s.cTR]} />
@@ -137,7 +167,7 @@ export function MainMenu({
                         {bestScore > 0 && (
                             <View style={s.bestRow}>
                                 <View style={s.bestDot} />
-                                <Text style={s.bestText}>EN IYI: {bestScore}</Text>
+                                <Text style={s.bestText}>{t("bestPrefix", { score: bestScore })}</Text>
                                 <View style={s.bestDot} />
                             </View>
                         )}
@@ -146,34 +176,10 @@ export function MainMenu({
 
                 <View style={s.spacer} />
 
-                {/* Bottom: icon buttons row + hint */}
+                {/* Bottom: Themes, Daily Challenge, Settings */}
                 <View style={s.bottomGroup}>
                     <FadeIn delay={300}>
                         <View style={s.iconRow}>
-                            <Pressable
-                                accessibilityRole="button"
-                                accessibilityLabel="View Achievements"
-                                onPress={onAchievements}
-                                style={({ pressed }) => [s.iconBtn, pressed && { opacity: 0.6 }]}
-                            >
-                                <Text style={s.iconEmoji}>🏅</Text>
-                                <Text style={[s.iconLabel, { color: C.gold }]}>BASARIMLAR</Text>
-                            </Pressable>
-
-                            <View style={s.iconDivider} />
-
-                            <Pressable
-                                accessibilityRole="button"
-                                accessibilityLabel="View Scores"
-                                onPress={onScores}
-                                style={({ pressed }) => [s.iconBtn, pressed && { opacity: 0.6 }]}
-                            >
-                                <Text style={s.iconEmoji}>🏆</Text>
-                                <Text style={[s.iconLabel, { color: C.cyan }]}>SKORLAR</Text>
-                            </Pressable>
-
-                            <View style={s.iconDivider} />
-
                             <Pressable
                                 accessibilityRole="button"
                                 accessibilityLabel="Open Themes"
@@ -181,7 +187,7 @@ export function MainMenu({
                                 style={({ pressed }) => [s.iconBtn, pressed && { opacity: 0.6 }]}
                             >
                                 <Text style={s.iconEmoji}>🎨</Text>
-                                <Text style={[s.iconLabel, { color: C.purple }]}>TEMALAR</Text>
+                                <Text style={[s.iconLabel, { color: C.purple }]}>{t("themes")}</Text>
                             </Pressable>
 
                             <View style={s.iconDivider} />
@@ -193,7 +199,7 @@ export function MainMenu({
                                 style={({ pressed }) => [s.iconBtn, pressed && { opacity: 0.6 }]}
                             >
                                 <Text style={s.iconEmoji}>🎯</Text>
-                                <Text style={[s.iconLabel, { color: C.gold }]}>GÖREV</Text>
+                                <Text style={[s.iconLabel, { color: C.gold }]}>{t("dailyChallenge")}</Text>
                             </Pressable>
 
                             <View style={s.iconDivider} />
@@ -205,7 +211,7 @@ export function MainMenu({
                                 style={({ pressed }) => [s.iconBtn, pressed && { opacity: 0.6 }]}
                             >
                                 <Text style={s.iconEmoji}>⚙️</Text>
-                                <Text style={[s.iconLabel, { color: C.subtleText }]}>AYARLAR</Text>
+                                <Text style={[s.iconLabel, { color: C.subtleText }]}>{t("settings")}</Text>
                             </Pressable>
                         </View>
                     </FadeIn>
@@ -213,7 +219,7 @@ export function MainMenu({
                     <FadeIn delay={420}>
                         <View style={s.hintBlock}>
                             <View style={s.hintLine} />
-                            <Text style={s.hintText}>HALKAYA TAM DOGRU ANDA DOKUN</Text>
+                            <Text style={s.hintText}>{t("hint")}</Text>
                             <View style={s.hintLine} />
                         </View>
                     </FadeIn>
@@ -242,6 +248,38 @@ const s = StyleSheet.create({
         fontFamily: "Orbitron_400Regular",
         fontSize: 8, letterSpacing: 5,
         color: "rgba(0,255,232,0.38)",
+    },
+
+    // ── Top Stats ──
+    topStatsRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginTop: 32,
+        borderWidth: 1,
+        borderColor: "rgba(0,255,232,0.08)",
+        borderRadius: 6,
+        backgroundColor: "rgba(0,255,232,0.02)",
+        paddingVertical: 14,
+        paddingHorizontal: 24,
+        gap: 0,
+    },
+    topStatBtn: {
+        alignItems: "center",
+        paddingHorizontal: 24,
+        gap: 7,
+    },
+    topStatEmoji: {
+        fontSize: 22,
+    },
+    topStatLabel: {
+        fontFamily: "Orbitron_400Regular",
+        fontSize: 8,
+        letterSpacing: 3,
+    },
+    topStatDivider: {
+        width: StyleSheet.hairlineWidth,
+        height: 30,
+        backgroundColor: "rgba(0,255,232,0.12)",
     },
 
     spacer: { flex: 1 },
@@ -283,15 +321,15 @@ const s = StyleSheet.create({
     },
     iconBtn: {
         alignItems: "center",
-        paddingHorizontal: 16,
-        gap: 6,
+        paddingHorizontal: 22,
+        gap: 7,
     },
     iconEmoji: {
-        fontSize: 20,
+        fontSize: 22,
     },
     iconLabel: {
         fontFamily: "Orbitron_400Regular",
-        fontSize: 7,
+        fontSize: 8,
         letterSpacing: 3,
     },
     iconDivider: {

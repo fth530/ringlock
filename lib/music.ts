@@ -4,7 +4,7 @@ class MusicManager {
     private sound: Audio.Sound | null = null;
     private loaded = false;
     private playing = false;
-    private _enabled = true;
+    private _enabled = false;  // Settings yüklenene kadar kapalı başla
 
     async init() {
         try {

@@ -6,6 +6,7 @@ import Animated, {
     useSharedValue, useAnimatedStyle, withTiming,
 } from "react-native-reanimated";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useTranslation } from "react-i18next";
 import { C } from "@/constants/game";
 import {
     RING_THEMES, BG_THEMES, isThemeUnlocked, useTheme, RingTheme, BgTheme,
@@ -43,12 +44,15 @@ function RingThemeCard({
     isActive,
     isUnlocked,
     onPress,
+    translatedName,
 }: {
     theme: RingTheme;
     isActive: boolean;
     isUnlocked: boolean;
     onPress: () => void;
+    translatedName: string;
 }) {
+    const { t } = useTranslation();
     return (
         <Pressable
             onPress={isUnlocked ? onPress : undefined}
@@ -63,10 +67,10 @@ function RingThemeCard({
             <View style={[tc.colorDot, { backgroundColor: isUnlocked ? theme.color : "#555", borderColor: isUnlocked ? theme.borderGlow : "transparent" }]} />
             <Text style={[tc.cardName, isActive && { color: theme.color }]}>{theme.emoji}</Text>
             <Text style={[tc.cardLabel, isActive && { color: theme.color }]} numberOfLines={1}>
-                {theme.name}
+                {translatedName}
             </Text>
             {!isUnlocked && <Text style={tc.lockIcon}>🔒</Text>}
-            {isActive && <Text style={[tc.activeTag, { color: theme.color }]}>AKTİF</Text>}
+            {isActive && <Text style={[tc.activeTag, { color: theme.color }]}>{t("active")}</Text>}
         </Pressable>
     );
 }
@@ -76,12 +80,15 @@ function BgThemeCard({
     isActive,
     isUnlocked,
     onPress,
+    translatedName,
 }: {
     theme: BgTheme;
     isActive: boolean;
     isUnlocked: boolean;
     onPress: () => void;
+    translatedName: string;
 }) {
+    const { t } = useTranslation();
     return (
         <Pressable
             onPress={isUnlocked ? onPress : undefined}
@@ -99,18 +106,26 @@ function BgThemeCard({
             }]} />
             <Text style={tc.cardLabel2}>{theme.emoji}</Text>
             <Text style={[tc.cardLabel, isActive && { color: theme.accentColor }]} numberOfLines={1}>
-                {theme.name}
+                {translatedName}
             </Text>
             {!isUnlocked && <Text style={tc.lockIcon}>🔒</Text>}
-            {isActive && <Text style={[tc.activeTag, { color: theme.accentColor }]}>AKTİF</Text>}
+            {isActive && <Text style={[tc.activeTag, { color: theme.accentColor }]}>{t("active")}</Text>}
         </Pressable>
     );
 }
 
 export function ThemeOverlay({ onClose }: { onClose: () => void }) {
+    const { t } = useTranslation();
     const { activeRingId, activeBgId, setRingTheme, setBgTheme } = useTheme();
     const [stats, setStats] = useState<UnlockStats>({ bestScore: 0, totalGames: 0 });
     const opacity = useSharedValue(0);
+
+    const themeNameKeys: Record<string, string> = {
+        pink: "theme.neonPink", cyan: "theme.cyberBlue", gold: "theme.gold",
+        purple: "theme.purpleNight", fire: "theme.fire", rainbow: "theme.rainbow",
+        space: "theme.space", ocean: "theme.ocean", lava: "theme.lava",
+        forest: "theme.forest", galaxy: "theme.galaxy",
+    };
 
     useEffect(() => {
         opacity.value = withTiming(1, { duration: 300 });
@@ -127,7 +142,7 @@ export function ThemeOverlay({ onClose }: { onClose: () => void }) {
     return (
         <Animated.View style={[StyleSheet.absoluteFill, tc.wrap, style]}>
             <View style={tc.container}>
-                <Text style={tc.title}>TEMALAR</Text>
+                <Text style={tc.title}>{t("themesTitle")}</Text>
                 <View style={tc.sep} />
 
                 <ScrollView
@@ -135,35 +150,37 @@ export function ThemeOverlay({ onClose }: { onClose: () => void }) {
                     contentContainerStyle={tc.scroll}
                 >
                     {/* Ring Themes */}
-                    <Text style={tc.sectionLabel}>HALKA RENGİ</Text>
+                    <Text style={tc.sectionLabel}>{t("ringColor")}</Text>
                     <View style={tc.grid}>
-                        {RING_THEMES.map((t) => (
+                        {RING_THEMES.map((rt) => (
                             <RingThemeCard
-                                key={t.id}
-                                theme={t}
-                                isActive={t.id === activeRingId}
-                                isUnlocked={isThemeUnlocked(t.unlockKey, stats)}
-                                onPress={() => setRingTheme(t.id)}
+                                key={rt.id}
+                                theme={rt}
+                                isActive={rt.id === activeRingId}
+                                isUnlocked={isThemeUnlocked(rt.unlockKey, stats)}
+                                onPress={() => setRingTheme(rt.id)}
+                                translatedName={t(themeNameKeys[rt.id])}
                             />
                         ))}
                     </View>
 
                     {/* Background Themes */}
-                    <Text style={[tc.sectionLabel, { marginTop: 20 }]}>ARKA PLAN</Text>
+                    <Text style={[tc.sectionLabel, { marginTop: 20 }]}>{t("backgroundLabel")}</Text>
                     <View style={tc.grid}>
-                        {BG_THEMES.map((t) => (
+                        {BG_THEMES.map((bt) => (
                             <BgThemeCard
-                                key={t.id}
-                                theme={t}
-                                isActive={t.id === activeBgId}
-                                isUnlocked={isThemeUnlocked(t.unlockKey, stats)}
-                                onPress={() => setBgTheme(t.id)}
+                                key={bt.id}
+                                theme={bt}
+                                isActive={bt.id === activeBgId}
+                                isUnlocked={isThemeUnlocked(bt.unlockKey, stats)}
+                                onPress={() => setBgTheme(bt.id)}
+                                translatedName={t(themeNameKeys[bt.id])}
                             />
                         ))}
                     </View>
 
                     <Text style={tc.hint}>
-                        Kilitleri açmak için puan yap ve oyun oyna
+                        {t("themeHint")}
                     </Text>
                 </ScrollView>
 
@@ -171,7 +188,7 @@ export function ThemeOverlay({ onClose }: { onClose: () => void }) {
                     onPress={handleClose}
                     style={({ pressed }) => [tc.closeBtn, pressed && { opacity: 0.6 }]}
                 >
-                    <Text style={tc.closeBtnText}>KAPAT</Text>
+                    <Text style={tc.closeBtnText}>{t("close")}</Text>
                 </Pressable>
             </View>
         </Animated.View>
@@ -180,7 +197,7 @@ export function ThemeOverlay({ onClose }: { onClose: () => void }) {
 
 const tc = StyleSheet.create({
     wrap: {
-        backgroundColor: "rgba(3,3,16,0.97)",
+        backgroundColor: "rgba(3,3,16,1)",
         alignItems: "center",
         justifyContent: "center",
         zIndex: 150,

@@ -10,6 +10,7 @@ export const MIN_DUR = 460;
 export const DUR_STEP = 48;
 
 export const EDGE_PAD = TARGET_R + 28;
+export const MIRROR_MAX_R = TARGET_R * 3.2;  // Mirror modda halka bu kadar buyur (klasik MAX_R cok buyuk)
 
 export const GLOW_MID_R = TARGET_R + 14;
 export const GLOW_OUT_R = TARGET_R + 36;
@@ -40,7 +41,7 @@ export const C = {
   pinkFaint: "rgba(255,0,102,0.06)",
   pinkSoft: "rgba(255,0,102,0.15)",
   subtleText: "rgba(0,255,232,0.45)",
-  overlayBg: "rgba(3,3,16,0.96)",
+  overlayBg: "rgba(3,3,16,1)",
   gold: "#FFD700",
   purple: "#A855F7",
   purpleMid: "#1a0a2e",
@@ -113,9 +114,9 @@ export const GAME_MODES: Record<GameMode, GameModeConfig> = {
     description: "Halka büyüyor — ters mekanik",
     lives: MAX_LIVES,
     timeLimitSec: 0,
-    initialDur: INITIAL_DUR + 300,
-    minDur: MIN_DUR + 60,
-    durStep: DUR_STEP - 8,
+    initialDur: INITIAL_DUR + 600,
+    minDur: MIN_DUR + 200,
+    durStep: DUR_STEP - 16,
     isMirror: true,
     unlockScore: 10,
   },
@@ -125,9 +126,9 @@ export const GAME_MODES: Record<GameMode, GameModeConfig> = {
     description: "2 halka, tek dokunuş",
     lives: MAX_LIVES,
     timeLimitSec: 0,
-    initialDur: INITIAL_DUR,
-    minDur: MIN_DUR,
-    durStep: DUR_STEP,
+    initialDur: INITIAL_DUR + 400,
+    minDur: MIN_DUR + 100,
+    durStep: DUR_STEP - 10,
     isDual: true,
     unlockScore: 25,
   },

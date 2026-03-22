@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, Pressable, StyleSheet, ScrollView } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useTranslation } from "react-i18next";
 import { C, GameMode, GAME_MODES } from "@/constants/game";
 
 const MODE_ORDER: GameMode[] = ["classic", "hardcore", "zen", "speed", "mirror", "dual"];
@@ -34,7 +35,17 @@ export function ModeSelect({
     onSelect: (mode: GameMode) => void;
     onBack: () => void;
 }) {
+    const { t } = useTranslation();
     const [bestAny, setBestAny] = useState<number | null>(null);
+
+    const modeDescKey: Record<string, string> = {
+        classic: "classicDesc", hardcore: "hardcoreDesc", zen: "zenDesc",
+        speed: "speedDesc", mirror: "mirrorDesc", dual: "dualDesc",
+    };
+    const modeLabelKey: Record<string, string> = {
+        classic: "classicLabel", hardcore: "hardcoreLabel", zen: "zenLabel",
+        speed: "speedLabel", mirror: "mirrorLabel", dual: "dualLabel",
+    };
 
     useEffect(() => {
         loadBestAnyMode().then(setBestAny);
@@ -49,7 +60,7 @@ export function ModeSelect({
 
     return (
         <View style={[StyleSheet.absoluteFill, s.wrap]}>
-            <Text style={s.title}>MOD SEÇ</Text>
+            <Text style={s.title}>{t("selectMode")}</Text>
             <View style={s.separator} />
 
             <ScrollView
@@ -78,7 +89,7 @@ export function ModeSelect({
                         >
                             <View style={s.modeHeader}>
                                 <Text style={[s.modeLabel, { color: unlocked ? color : "rgba(255,255,255,0.3)" }]}>
-                                    {mode.label}
+                                    {t(modeLabelKey[key])}
                                 </Text>
                                 {!unlocked && (
                                     <Text style={s.lockIcon}>🔒</Text>
@@ -86,8 +97,8 @@ export function ModeSelect({
                             </View>
                             <Text style={[s.modeDesc, { color: unlocked ? `${color}99` : "rgba(255,255,255,0.2)" }]}>
                                 {unlocked
-                                    ? mode.description
-                                    : `${mode.unlockScore}+ puan ile açılır`}
+                                    ? t(modeDescKey[key])
+                                    : t("unlockWith", { score: mode.unlockScore })}
                             </Text>
                         </Pressable>
                     );
@@ -100,7 +111,7 @@ export function ModeSelect({
                 onPress={onBack}
                 style={({ pressed }) => [s.backBtn, pressed && { opacity: 0.5 }]}
             >
-                <Text style={s.backText}>GERİ</Text>
+                <Text style={s.backText}>{t("back")}</Text>
             </Pressable>
         </View>
     );

@@ -4,6 +4,7 @@ import Animated, { useSharedValue, useAnimatedStyle, withTiming } from "react-na
 import Constants from "expo-constants";
 import { C } from "@/constants/game";
 import { useSettings } from "@/lib/SettingsContext";
+import { useTranslation } from "react-i18next";
 
 function ToggleRow({
     label,
@@ -46,7 +47,8 @@ function SectionHeader({ label }: { label: string }) {
     );
 }
 
-export function SettingsOverlay({ onClose }: { onClose: () => void }) {
+export function SettingsOverlay({ onClose, onLanguage }: { onClose: () => void; onLanguage?: () => void }) {
+    const { t } = useTranslation();
     const opacity = useSharedValue(0);
     const {
         soundEnabled, vibrationEnabled, largeText, highContrast, musicEnabled,
@@ -69,12 +71,12 @@ export function SettingsOverlay({ onClose }: { onClose: () => void }) {
 
     function handleReset() {
         Alert.alert(
-            "VERİLERİ SIFIRLA",
-            "Tüm skorlar, başarımlar ve ayarlar silinecek. Bu işlem geri alınamaz.",
+            t("resetTitle"),
+            t("resetMessage"),
             [
-                { text: "İptal", style: "cancel" },
+                { text: t("cancel"), style: "cancel" },
                 {
-                    text: "Sıfırla",
+                    text: t("resetConfirm"),
                     style: "destructive",
                     onPress: async () => {
                         setResetting(true);
@@ -89,7 +91,7 @@ export function SettingsOverlay({ onClose }: { onClose: () => void }) {
 
     return (
         <Animated.View style={[StyleSheet.absoluteFill, s.wrap, style]}>
-            <Text style={s.title}>AYARLAR</Text>
+            <Text style={s.title}>{t("settingsTitle")}</Text>
             <View style={s.separator} />
 
             <ScrollView
@@ -97,24 +99,24 @@ export function SettingsOverlay({ onClose }: { onClose: () => void }) {
                 contentContainerStyle={s.scrollContent}
             >
                 {/* Ses & Titreşim */}
-                <SectionHeader label="SES & TİTREŞİM" />
+                <SectionHeader label={t("soundVibration")} />
 
                 <ToggleRow
-                    label="MÜZİK"
-                    sublabel="Arka plan müziği"
+                    label={t("music")}
+                    sublabel={t("musicDesc")}
                     enabled={musicEnabled}
                     onToggle={toggleMusic}
                     accessLabel="Toggle Music"
                 />
                 <ToggleRow
-                    label="SES"
-                    sublabel="Vuruş ve kaçırma sesleri"
+                    label={t("sound")}
+                    sublabel={t("soundDesc")}
                     enabled={soundEnabled}
                     onToggle={toggleSound}
                     accessLabel="Toggle Sound"
                 />
                 <ToggleRow
-                    label="TİTREŞİM"
+                    label={t("vibration")}
                     enabled={vibrationEnabled}
                     onToggle={toggleVibration}
                     accessLabel="Toggle Vibration"
@@ -123,18 +125,18 @@ export function SettingsOverlay({ onClose }: { onClose: () => void }) {
                 <View style={s.divider} />
 
                 {/* Erişilebilirlik */}
-                <SectionHeader label="ERİŞİLEBİLİRLİK" />
+                <SectionHeader label={t("accessibilitySection")} />
 
                 <ToggleRow
-                    label="BÜYÜK YAZI"
-                    sublabel="Skor ve hit etiketlerini büyütür"
+                    label={t("largeText")}
+                    sublabel={t("largeTextDesc")}
                     enabled={largeText}
                     onToggle={toggleLargeText}
                     accessLabel="Toggle Large Text"
                 />
                 <ToggleRow
-                    label="YÜKSEK KONTRAST"
-                    sublabel="Halka ve metin parlaklığını artırır"
+                    label={t("highContrast")}
+                    sublabel={t("highContrastDesc")}
                     enabled={highContrast}
                     onToggle={toggleHighContrast}
                     accessLabel="Toggle High Contrast"
@@ -142,8 +144,26 @@ export function SettingsOverlay({ onClose }: { onClose: () => void }) {
 
                 <View style={s.divider} />
 
+                {/* Dil */}
+                <SectionHeader label={t("language")} />
+
+                <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Change Language"
+                    onPress={onLanguage}
+                    style={({ pressed }) => [s.row, pressed && { opacity: 0.6 }]}
+                >
+                    <View style={s.rowLeft}>
+                        <Text style={s.label}>{t("language")}</Text>
+                        <Text style={s.sublabel}>{t("languageDesc")}</Text>
+                    </View>
+                    <Text style={{ fontSize: 20 }}>🌍</Text>
+                </Pressable>
+
+                <View style={s.divider} />
+
                 {/* Veri */}
-                <SectionHeader label="VERİLER" />
+                <SectionHeader label={t("dataSection")} />
 
                 <Pressable
                     accessibilityRole="button"
@@ -152,7 +172,7 @@ export function SettingsOverlay({ onClose }: { onClose: () => void }) {
                     disabled={resetting}
                     style={({ pressed }) => [s.resetBtn, pressed && { opacity: 0.6 }]}
                 >
-                    <Text style={s.resetBtnText}>{resetting ? "SİFIRLANIYOR..." : "VERİLERİ SIFIRLA"}</Text>
+                    <Text style={s.resetBtnText}>{resetting ? t("resetting") : t("resetData")}</Text>
                 </Pressable>
             </ScrollView>
 
@@ -164,7 +184,7 @@ export function SettingsOverlay({ onClose }: { onClose: () => void }) {
                 onPress={handleClose}
                 style={({ pressed }) => [s.closeBtn, pressed && { opacity: 0.6 }]}
             >
-                <Text style={s.closeBtnText}>KAPAT</Text>
+                <Text style={s.closeBtnText}>{t("close")}</Text>
             </Pressable>
 
             <Text style={s.version}>RingLock v{appVersion}</Text>
@@ -178,6 +198,8 @@ const s = StyleSheet.create({
         justifyContent: "center",
         backgroundColor: C.overlayBg,
         zIndex: 100,
+        paddingTop: 60,
+        paddingBottom: 40,
     },
     title: {
         fontFamily: "Orbitron_900Black",

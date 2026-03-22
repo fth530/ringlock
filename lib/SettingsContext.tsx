@@ -10,6 +10,7 @@ interface Settings {
 }
 
 interface SettingsState extends Settings {
+    loaded: boolean;
     toggleSound: () => void;
     toggleVibration: () => void;
     toggleLargeText: () => void;
@@ -48,6 +49,7 @@ const DEFAULT: Settings = {
 
 const SettingsContext = createContext<SettingsState>({
     ...DEFAULT,
+    loaded: false,
     toggleSound: () => { },
     toggleVibration: () => { },
     toggleLargeText: () => { },
@@ -58,6 +60,7 @@ const SettingsContext = createContext<SettingsState>({
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
     const [settings, setSettings] = useState<Settings>(DEFAULT);
+    const [loaded, setLoaded] = useState(false);
     const settingsRef = useRef<Settings>(DEFAULT);
 
     useEffect(() => {
@@ -65,17 +68,18 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
             if (raw) {
                 try {
                     const parsed = JSON.parse(raw);
-                    const loaded: Settings = {
+                    const result: Settings = {
                         soundEnabled: typeof parsed.soundEnabled === "boolean" ? parsed.soundEnabled : true,
                         vibrationEnabled: typeof parsed.vibrationEnabled === "boolean" ? parsed.vibrationEnabled : true,
                         largeText: typeof parsed.largeText === "boolean" ? parsed.largeText : false,
                         highContrast: typeof parsed.highContrast === "boolean" ? parsed.highContrast : false,
                         musicEnabled: typeof parsed.musicEnabled === "boolean" ? parsed.musicEnabled : true,
                     };
-                    settingsRef.current = loaded;
-                    setSettings(loaded);
+                    settingsRef.current = result;
+                    setSettings(result);
                 } catch { }
             }
+            setLoaded(true);
         });
     }, []);
 
@@ -101,6 +105,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     return (
         <SettingsContext.Provider value={{
             ...settings,
+            loaded,
             toggleSound,
             toggleVibration,
             toggleLargeText,

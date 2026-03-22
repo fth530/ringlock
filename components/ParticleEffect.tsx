@@ -60,7 +60,7 @@ export function ParticleEffect({ cx, cy }: Props) {
 
     useEffect(() => {
         progress.value = 0;
-        progress.value = withTiming(1, {
+        progress.value = withTiming(1.32, {
             duration: DURATION,
             easing: Easing.out(Easing.quad),
         });

@@ -1,10 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, Pressable, StyleSheet, ScrollView, Platform } from "react-native";
+import { useTranslation } from "react-i18next";
 import { C } from "@/constants/game";
 import { ACHIEVEMENTS, getUnlockedAchievements } from "@/lib/achievements";
 
 export function AchievementsOverlay({ onClose }: { onClose: () => void }) {
+    const { t } = useTranslation();
     const [unlocked, setUnlocked] = useState<string[]>([]);
+
+    const achKeyMap: Record<string, string> = {
+        score_10: "score10", score_25: "score25", score_50: "score50", score_100: "score100",
+        combo_10: "combo10", combo_25: "combo25", combo_50: "combo50",
+        perfect_5: "perfect5", perfect_15: "perfect15", perfect_only: "perfectOnly",
+        hardcore_20: "hardcore20", speed_30: "speed30", zen_100: "zen100",
+        mirror_15: "mirror15", mirror_30: "mirror30",
+        dual_10: "dual10", dual_25: "dual25",
+        games_10: "games10", games_50: "games50", total_500: "total500",
+    };
 
     useEffect(() => {
         getUnlockedAchievements().then(setUnlocked);
@@ -15,7 +27,7 @@ export function AchievementsOverlay({ onClose }: { onClose: () => void }) {
 
     return (
         <View style={[StyleSheet.absoluteFill, s.wrap]}>
-            <Text style={s.title}>BASARIMLAR</Text>
+            <Text style={s.title}>{t("achievements")}</Text>
             <Text style={s.counter}>{unlockedCount} / {totalCount}</Text>
             <View style={s.separator} />
 
@@ -30,10 +42,10 @@ export function AchievementsOverlay({ onClose }: { onClose: () => void }) {
                             <Text style={s.achIcon}>{isUnlocked ? ach.icon : "🔒"}</Text>
                             <View style={s.achInfo}>
                                 <Text style={[s.achTitle, !isUnlocked && s.achTextLocked]}>
-                                    {ach.title}
+                                    {t(`ach.${achKeyMap[ach.id]}.title`)}
                                 </Text>
                                 <Text style={[s.achDesc, !isUnlocked && s.achTextLocked]}>
-                                    {ach.description}
+                                    {t(`ach.${achKeyMap[ach.id]}.desc`)}
                                 </Text>
                             </View>
                         </View>
@@ -47,7 +59,7 @@ export function AchievementsOverlay({ onClose }: { onClose: () => void }) {
                 onPress={onClose}
                 style={({ pressed }) => [s.closeBtn, pressed && { opacity: 0.6 }]}
             >
-                <Text style={s.closeText}>KAPAT</Text>
+                <Text style={s.closeText}>{t("close")}</Text>
             </Pressable>
         </View>
     );
@@ -62,17 +74,10 @@ const s = StyleSheet.create({
     },
     title: {
         fontFamily: "Orbitron_900Black",
-        fontSize: 20,
-        letterSpacing: 6,
-        color: C.gold,
+        fontSize: 22,
+        letterSpacing: 7,
+        color: C.cyan,
         marginBottom: 4,
-        ...(Platform.OS === "ios"
-            ? {
-                textShadowColor: C.gold,
-                textShadowRadius: 14,
-                textShadowOffset: { width: 0, height: 0 },
-            }
-            : {}),
     },
     counter: {
         fontFamily: "Orbitron_400Regular",
