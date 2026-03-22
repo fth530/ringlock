@@ -185,4 +185,10 @@ export default {
     "ach.total500.desc": "Acumule 500 pontos no total",
     selectLanguage: "SELECIONAR IDIOMA",
     continueBtn: "CONTINUAR",
+
+    chaosLabel: "CHAOS",
+    chaosDesc: "Velocidade aleatória — cada anel é surpresa",
+    watchAdContinue: "VER ANÚNCIO → +1 VIDA",
+    watchAdUnlock: "▶ Ver anúncio para desbloquear",
+    adLoading: "CARREGANDO...",
 };

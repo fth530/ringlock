@@ -24,6 +24,7 @@ const MODE_COLORS: Record<GameMode, string> = {
     speed:    C.gold,
     mirror:   "#00BFFF",
     dual:     "#FF8C00",
+    chaos:    "#FF00FF",
 };
 
 /* ─── Animated helpers ───────────────────────────────────────────────── */
@@ -116,6 +117,8 @@ export function GameOverOverlay({
     isNewRecord = false,
     onRestart,
     onMenu,
+    onWatchAd,
+    adReady = false,
 }: {
     score: number;
     bestScore: number;
@@ -124,6 +127,8 @@ export function GameOverOverlay({
     isNewRecord?: boolean;
     onRestart: () => void;
     onMenu: () => void;
+    onWatchAd?: () => void;
+    adReady?: boolean;
 }) {
     const { t } = useTranslation();
     const bg = useSharedValue(0);
@@ -207,6 +212,22 @@ export function GameOverOverlay({
                 {/* ── Buttons ── */}
                 <FadeSlide delay={700}>
                     <View style={s.btnsArea}>
+                        {/* Watch Ad for extra life */}
+                        {adReady && onWatchAd && GAME_MODES[gameMode].lives > 0 && (
+                            <Pressable
+                                accessibilityRole="button"
+                                accessibilityLabel="Watch ad for extra life"
+                                onPress={onWatchAd}
+                                style={({ pressed }) => [
+                                    s.adBtn,
+                                    pressed && { opacity: 0.75, transform: [{ scale: 0.97 }] },
+                                ]}
+                            >
+                                <Text style={s.adBtnIcon}>▶</Text>
+                                <Text style={s.adBtnText}>{t("watchAdContinue")}</Text>
+                            </Pressable>
+                        )}
+
                         {/* Primary */}
                         <Pressable
                             accessibilityRole="button"
@@ -445,6 +466,28 @@ const s = StyleSheet.create({
         fontSize: 14,
         letterSpacing: 3,
         color: "#030310",
+    },
+    adBtn: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 10,
+        width: "100%",
+        borderRadius: 12,
+        paddingVertical: 16,
+        borderWidth: 1.5,
+        borderColor: C.gold,
+        backgroundColor: "rgba(255,215,0,0.08)",
+    },
+    adBtnIcon: {
+        fontSize: 14,
+        color: C.gold,
+    },
+    adBtnText: {
+        fontFamily: "Orbitron_700Bold",
+        fontSize: 11,
+        letterSpacing: 2,
+        color: C.gold,
     },
     secRow: {
         flexDirection: "row",

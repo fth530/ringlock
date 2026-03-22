@@ -218,4 +218,13 @@ export default {
     // Language Select
     selectLanguage: "DİL SEÇ",
     continueBtn: "DEVAM ET",
+
+    // Game Modes (new)
+    chaosLabel: "CHAOS",
+    chaosDesc: "Rastgele hız — her halka sürpriz",
+
+    // Ads
+    watchAdContinue: "REKLAM İZLE → +1 CAN",
+    watchAdUnlock: "▶ Reklam izle ve aç",
+    adLoading: "REKLAM YÜKLENİYOR...",
 };

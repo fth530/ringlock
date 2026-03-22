@@ -185,4 +185,10 @@ export default {
     "ach.total500.desc": "合計500ポイント達成",
     selectLanguage: "言語を選択",
     continueBtn: "続ける",
+
+    chaosLabel: "CHAOS",
+    chaosDesc: "ランダム速度 — 毎回サプライズ",
+    watchAdContinue: "広告を見る → +1 ライフ",
+    watchAdUnlock: "▶ 広告を見てアンロック",
+    adLoading: "読み込み中...",
 };

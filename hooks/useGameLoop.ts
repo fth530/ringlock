@@ -218,6 +218,12 @@ export function useGameLoop(topPad: number, botPad: number) {
         anchorX.value = pos.x;
         anchorY.value = pos.y;
 
+        // CHAOS: rastgele hiz — %50 ile %150 arasi
+        if (mode.isChaos) {
+            const randomFactor = 0.5 + Math.random() * 1.0;
+            dur = Math.max(mode.minDur, Math.round(dur * randomFactor));
+        }
+
         if (mode.isMirror) {
             // Ring grows from 0 → MIRROR_MAX_R; miss when it overshoots
             ringRadius.value = 0;
@@ -289,6 +295,14 @@ export function useGameLoop(topPad: number, botPad: number) {
         if (mode.lives === 0) {
             missFlash();
             playMissSound();
+            // Zen modda miss olunca skora oranli ceza (negatife de gidebilir)
+            if (modeRef.current === "zen") {
+                const s = scoreRef.current;
+                const penalty = s >= 100 ? 20 : s >= 50 ? 10 : s >= 25 ? 5 : s >= 10 ? 3 : 1;
+                scoreRef.current -= penalty;
+                setScore(scoreRef.current);
+                updateVisualPhase(Math.max(0, scoreRef.current));
+            }
             durRef.current = Math.max(mode.minDur, durRef.current + 20);
             spawnRing(durRef.current);
             return;
@@ -424,15 +438,41 @@ export function useGameLoop(topPad: number, botPad: number) {
         beginGame(modeRef.current);
     }, [ringRadius, ringRadius2, beginGame]);
 
+    const continueAfterAd = useCallback(() => {
+        // Skoru koru, +1 can ver, yavas halkayla basla (rahat giris)
+        cancelAnimation(ringRadius);
+        cancelAnimation(ringRadius2);
+        phaseRef.current = "playing";
+        livesRef.current = 1;
+        comboRef.current = 0;
+        dualMissedRef.current = false;
+        setLives(1);
+        setCombo(0);
+        setHitQuality(null);
+        setPhase("playing");
+        setNewAchievements([]);
+        // Halkayi yavas baslat — kisi hemen yanmasin
+        const easyDur = Math.max(durRef.current, GAME_MODES[modeRef.current].initialDur);
+        spawnRing(easyDur);
+    }, [ringRadius, ringRadius2, spawnRing]);
+
     const handleMenu = useCallback(() => {
         cancelAnimation(ringRadius);
         cancelAnimation(ringRadius2);
         clearTimer();
         ringRadius.value = 0;
         ringRadius2.value = 0;
+
+        // Zen/Speed gibi can'siz modlardan CIK'a basinca skoru kaydet
+        if (phaseRef.current === "playing" && scoreRef.current > 0) {
+            saveBest(scoreRef.current, modeRef.current);
+            recordPlayToday();
+            updateLifetimeStats(scoreRef.current);
+        }
+
         phaseRef.current = "menu";
         setPhase("menu");
-    }, [ringRadius, ringRadius2, clearTimer]);
+    }, [ringRadius, ringRadius2, clearTimer, saveBest]);
 
     const lastTapRef = useRef(0);
     const handleScreenTap = useCallback(() => {
@@ -516,6 +556,6 @@ export function useGameLoop(topPad: number, botPad: number) {
         ringRadius, flashOpacity, targetScale, targetColor, anchorX, anchorY,
         ringRadius2, anchorX2, anchorY2, targetScale2, targetColor2,
         shakeAnim,
-        beginGame, handleRestart, handleMenu, handleScreenTap,
+        beginGame, handleRestart, handleMenu, handleScreenTap, continueAfterAd,
     };
 }

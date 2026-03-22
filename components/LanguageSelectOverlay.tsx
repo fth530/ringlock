@@ -6,8 +6,8 @@ import Animated, {
     withTiming,
 } from "react-native-reanimated";
 import { C } from "@/constants/game";
+import { useTranslation } from "react-i18next";
 import { LANGUAGES, changeLanguage, type LangCode } from "@/lib/i18n";
-import i18next from "i18next";
 
 const { width: SW } = Dimensions.get("window");
 const CARD_W = Math.min(SW - 48, 340);
@@ -19,8 +19,9 @@ export function LanguageSelectOverlay({
     onDone: () => void;
     isOnboarding?: boolean;
 }) {
+    const { t, i18n } = useTranslation();
     const [selected, setSelected] = useState<LangCode>(
-        (i18next.language as LangCode) ?? "en"
+        (i18n.language as LangCode) ?? "en"
     );
     const opacity = useSharedValue(0);
 
@@ -40,16 +41,12 @@ export function LanguageSelectOverlay({
         setTimeout(onDone, 220);
     }
 
-    // Static title that works in all contexts
-    const title = isOnboarding ? "SELECT LANGUAGE\nDİL SEÇ" : i18next.t("language");
-
     return (
         <Animated.View style={[StyleSheet.absoluteFill, s.wrap, wrapStyle]}>
             <View style={s.container}>
-                <Text style={s.title}>{isOnboarding ? "🌍" : ""}</Text>
-                {isOnboarding && <Text style={s.onboardingTitle}>SELECT LANGUAGE</Text>}
-                {isOnboarding && <Text style={s.onboardingSubtitle}>DİL SEÇ</Text>}
-                {!isOnboarding && <Text style={s.settingsTitle}>{i18next.t("language")}</Text>}
+                <Text style={s.title}>🌍</Text>
+                <Text style={s.onboardingTitle}>{t("selectLanguage")}</Text>
+                {!isOnboarding && <Text style={s.onboardingSubtitle}>{t("languageDesc")}</Text>}
                 <View style={s.sep} />
 
                 <ScrollView
@@ -96,7 +93,7 @@ export function LanguageSelectOverlay({
                     ]}
                 >
                     <Text style={s.continueBtnText}>
-                        {isOnboarding ? "CONTINUE / DEVAM ET" : i18next.t("close")}
+                        {t("continueBtn")}
                     </Text>
                 </Pressable>
             </View>

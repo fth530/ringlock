@@ -9,7 +9,18 @@ import Animated, {
     Easing,
 } from "react-native-reanimated";
 import { C } from "@/constants/game";
+import { useTranslation } from "react-i18next";
 import type { Achievement } from "@/lib/achievements";
+
+const achKeyMap: Record<string, string> = {
+    score_10: "score10", score_25: "score25", score_50: "score50", score_100: "score100",
+    combo_10: "combo10", combo_25: "combo25", combo_50: "combo50",
+    perfect_5: "perfect5", perfect_15: "perfect15", perfect_only: "perfectOnly",
+    hardcore_20: "hardcore20", speed_30: "speed30", zen_100: "zen100",
+    mirror_15: "mirror15", mirror_30: "mirror30",
+    dual_10: "dual10", dual_25: "dual25",
+    games_10: "games10", games_50: "games50", total_500: "total500",
+};
 
 export function AchievementToast({
     achievement,
@@ -18,6 +29,7 @@ export function AchievementToast({
     achievement: Achievement;
     onDone: () => void;
 }) {
+    const { t } = useTranslation();
     const translateY = useSharedValue(-100);
     const opacity = useSharedValue(0);
 
@@ -42,8 +54,8 @@ export function AchievementToast({
     return (
         <Animated.View style={[s.toast, animStyle]} pointerEvents="none">
             <Text style={s.icon}>{achievement.icon}</Text>
-            <Text style={s.title}>{achievement.title}</Text>
-            <Text style={s.desc}>{achievement.description}</Text>
+            <Text style={s.title}>{t(`ach.${achKeyMap[achievement.id]}.title`)}</Text>
+            <Text style={s.desc}>{t(`ach.${achKeyMap[achievement.id]}.desc`)}</Text>
         </Animated.View>
     );
 }

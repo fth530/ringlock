@@ -1,0 +1,349 @@
+================================================================================
+                    RINGLOCK - APP STORE LANSMAN EYLEM PLANI
+================================================================================
+              Kaynak: Gemini Tavsiye Raporu + Claude Strateji Raporu +
+                      ChatGPT Hedef Pazar ve Indirme Trendleri
+                            Tarih: 21 Mart 2026
+================================================================================
+
+
+[ ] = Yapilmadi
+[~] = Devam Ediyor
+[x] = Tamamlandi
+
+
+================================================================================
+1. ASO (APP STORE OPTIMIZATION) - KEYWORD ve LISTING
+================================================================================
+
+1.1 Oyun Adi ve Alt Baslik
+--------------------------------------------------------------------------------
+[ ] App Store basligi guncelle:
+    "RingLock - Tap the Ring: Timing Game"
+    (Marka adi + anahtar kelimeler birlikte, 30 karakter sinirinda)
+
+[ ] App Store altyazisi (subtitle) ayarla:
+    "Reflex & Timing Challenge"
+    (30 karakter siniri, en yuksek hacimli keywordler)
+
+[ ] Google Play basligi guncelle:
+    "RingLock: Reaction Timing Game - Reflex Challenge"
+
+1.2 App Store Keyword Alani (100 Karakter - iOS)
+--------------------------------------------------------------------------------
+[ ] Keyword alanini su sekilde doldur (virgul ayirmali, bosluk yok):
+    ring,tap,timing,reflex,circle,precision,neon,arcade,combo,challenge,speed,zen,casual,addictive,rhythm
+
+    NOT: "game", "free", "the" gibi Apple'in otomatik indexledigi kelimeleri KULLANMA.
+    NOT: Baslikta gecen kelimeleri tekrarlama (yer israfi olur).
+
+[ ] Long-tail keyword hedefleri belirle:
+    - "timing game" (orta hacim, dusuk rekabet)
+    - "reflex test game" (dusuk rekabet, yuksek nis deger)
+    - "ring tap game" (cok dusuk rekabet, dogrudan esleme)
+    - "circle timing challenge" (dusuk rekabet)
+    - "one tap arcade" (orta hacim)
+    - "neon arcade game" (gorsel kimlikle eslesen nis)
+    - "precision tap game" (mekanik tanimli arama)
+    - "addictive reflex game" (duygu bazli arama)
+
+[ ] 2 haftada bir keyword performansini analiz et ve guncelle
+
+1.3 Google Play Aciklama Optimizasyonu
+--------------------------------------------------------------------------------
+[ ] Kisa aciklama (80 karakter):
+    "Test your reflexes! Tap the ring at the perfect moment. 6 modes, combos & neon themes."
+
+[ ] Uzun aciklama (4000 karakter) yaz - su kelimeleri dogal sekilde 3-5 kez kullan:
+    - zamanlama oyunu, refleks testi, reflex reaction, circular target
+    - timing game, tap game, test your reflexes, reaction time
+    - Rakip aciklamalarindaki basarili ifadeler: "test your reflexes",
+      "timing game", "perfect hit", "one tap arcade"
+
+[ ] Keyword stuffing'den kacin, dogal ve akici bir dil kullan
+
+
+================================================================================
+2. GORSEL ASO - IKON, SCREENSHOT, VIDEO
+================================================================================
+
+2.1 App Ikonu
+--------------------------------------------------------------------------------
+[ ] Ikon tasarimi: Neon pembe halka + koyu arka plan
+    - Basit, 1 saniyede anlasilir
+    - Cyberpunk estigi korunmali
+    - Magaza beyaz arka plani uzerinde koyu ikon dikkat ceker
+    - Rakiplerin cogu karakter/avatar kullaniyor, sen sade halka ile ayrisssin
+
+[ ] En az 3 ikon varyanti hazirlayip A/B test yap
+
+2.2 Ekran Goruntuleri (Screenshots)
+--------------------------------------------------------------------------------
+[ ] ILK 3 SCREENSHOT KRITIK (kullanicilarin %70'i sadece ilk 3'e bakar):
+
+    1. Ekran: "Can you get 100?" meydan okuyan yazi +
+             Rainbow/Fire tema halka gorseli + PERFECT ani
+    2. Ekran: 6 farkli mod tanitimi (Zen vs Hardcore vurgusu)
+    3. Ekran: Combo sistemi + "25x COMBO!" yazisi + patlama efekti
+
+    Ek ekranlar:
+    4. Neon tema cesitliligi (6 halka + 5 arka plan)
+    5. Basarimlar ve gunluk gorevler
+    6. "GOOD" / "PERFECT" / "LATE" vuruslarin gosterimi
+
+[ ] Her screenshot'a kisa, dikkat cekici metin overlay ekle
+[ ] Her dil icin ayri screenshot metinleri hazirla
+
+2.3 On Izleme Videosu (App Preview)
+--------------------------------------------------------------------------------
+[ ] 15-30 saniyelik App Preview videosu hazirla:
+    - ILK 3 SANIYE: En etkileyici PERFECT vurusuyla basla
+    - Partikul efektleri ve seslerin net duyulmasi
+    - Double hit sound'un ASMR etkisi
+    - Farkli modlardan kisacik kesitler
+    - Ses, tatmin duygusunun %50'sidir - mutlaka sesli olsun
+
+
+================================================================================
+3. YERELLESTIRME (LOCALIZATION) - ONCELIK SIRASI
+================================================================================
+
+Her dil icin AYRI keyword seti, screenshot metni ve aciklama hazirlanmali.
+
+Oncelik  | Dil           | Hedef Pazar                    | Neden?
+---------|---------------|--------------------------------|---------------------------
+1        | Ingilizce     | ABD, Ingiltere, Kanada, AU     | En yuksek gelir pazari
+2        | Portekizce BR | Brezilya                       | 3. buyuk indirme pazari
+3        | Ispanyolca    | Meksika, Ispanya, Latin Am.    | Genis cografya
+4        | Endonezce     | Endonezya                      | En hizli buyuyen pazar (%21)
+5        | Turkce        | Turkiye                        | Ana pazar
+6        | Japonca       | Japonya                        | Yuksek ARPU (%21.8 buyume)
+7        | Hintce        | Hindistan                      | #1 indirme pazari
+
+[ ] Oyun ici tum metinlerin ceviri altyapisini kur (i18n sistemi)
+[ ] Onboarding ekraninda ulke/dil secim ekrani ekle (bayrakli)
+[ ] Ayarlardan dil degistirme secenegi ekle
+[ ] Her locale icin App Store listing'i ayri hazirla
+[ ] Her dil icin ayri keyword seti olustur:
+
+    Turkce keywords:
+    refleks,zamanlama,tap oyunu,reaksiyon,basit eglence,reflex test,halka,arcade
+
+    Portekizce keywords:
+    reflexo,tempo,anel,precisao,arcade,neon,casual,desafio,toque,ritmo
+
+    Ispanyolca keywords:
+    reflejo,tiempo,anillo,precision,arcade,neon,casual,desafio,toque,ritmo
+
+    Endonezce keywords:
+    refleks,waktu,cincin,presisi,arkade,neon,kasual,tantangan,ketuk,ritme
+
+    Japonca keywords:
+    リフレックス,タイミング,リング,精密,アーケード,ネオン,カジュアル,チャレンジ,タップ,リズム
+
+
+================================================================================
+4. HEDEF PAZAR STRATEJISI
+================================================================================
+
+4.1 Tier 1 - Oncelikli Pazarlar (Yuksek Hacim + Gelir)
+--------------------------------------------------------------------------------
+[ ] ABD:
+    - App Store gelirlerinin %30'u bu pazardan
+    - iOS kullanici orani yuksek, IAP harcamasi en yuksek
+    - ASO ve keyword calismasi Ingilizce oncelikli
+    - Aylik ~280-330M indirme potansiyeli
+
+[ ] Hindistan:
+    - Mutlak indirme sampiyonu (~680-760M/ay)
+    - Android agirlikli, dusuk ARPU ama devasa hacim
+    - Reklam geliri modeli icin mukemmel
+    - Hindi yerellestirme buyuk avantaj saglar
+
+[ ] Brezilya:
+    - ~250-300M/ay indirme
+    - Hem iOS hem Android'de guclu casual oyun talebi
+    - Portekizce yerellestirme zorunlu
+
+4.2 Tier 2 - Buyume Pazarlari
+--------------------------------------------------------------------------------
+[ ] Endonezya: 2025'te %21 buyume, dusuk CPI, yuksek hacim
+[ ] Meksika & Latin Amerika: Casual oyun kulturu guclu, Ispanyolca ile genis kitle
+[ ] Turkiye: Kendi pazarimiz, Turkce zaten mevcut, hyper-casual ilgi yuksek
+
+4.3 Tier 3 - Yuksek Gelir/Dusuk Hacim
+--------------------------------------------------------------------------------
+[ ] Japonya: Cok yuksek ARPU, Japonca yerellestirme sart
+[ ] Guney Kore & Almanya: Oyun kulturu guclu, stratejik hedeflenebilir
+
+
+================================================================================
+5. MONETIZASYON STRATEJISI (Hybrid-Casual Model)
+================================================================================
+
+NOT: 2025'te saf hyper-casual model (sadece reklam geliri) artik surdurulebilir degil.
+RingLock'un 6 modu, combo sistemi, basarimlari zaten hybrid-casual yapiya uygun.
+
+[ ] Rewarded Video Ads: Ekstra can, combo koruma, tema acma icin odullu reklam
+[ ] Interstitial Ads: Her 3-4 oyunda bir (asiriya kacmadan)
+[ ] Reklam Kaldirma (IAP): Tek seferlik $2.99-3.99 satin alma
+[ ] Premium Tema Paketleri: $0.99-1.99 ozel neon temalari
+[ ] Battle Pass (Opsiyonel): Haftalik/aylik ilerleme sistemi (gelecek guncelleme)
+
+
+================================================================================
+6. RETENTION (OYUNCU TUTMA) MEKANIZMALARI
+================================================================================
+
+Hedef: Day-1 retention > %40 (hyper-casual ortalama %25)
+
+Mevcut guclu ozellikler:
+[x] Gunluk gorevler (her gun farkli hedef)
+[x] Kilitli modlar (Mirror: 10+, Dual: 25+ skor)
+[x] 22 basarim (uzun vadeli hedef)
+[x] Combo sistemi ("bir tur daha" psikolojisi)
+[x] Tema acma (kisisellistirme)
+
+Eklenmesi gerekenler:
+[ ] Push notification: Gunluk gorev hatirlatma
+[ ] Streak sistemi gorsel gosterimi (ust uste kac gun oynadin)
+[ ] In-App Events (Apple): Haftalik etkinlikler, sezonluk temalar
+[ ] Skor paylasimi: Oyuncu yandinda skorunu tek tikla Instagram Story'de paylasabilsin
+[ ] Ilk 10 saniyede kolay baslat, sonra zorlastir (yeni oyuncu deneyimi)
+
+
+================================================================================
+7. ORGANIK BUYUME TAKTIKLERI
+================================================================================
+
+7.1 TikTok & Sosyal Medya (#1 Oncelik)
+--------------------------------------------------------------------------------
+[ ] TikTok hesabi ac ve teaser icerikleri paylasmaya basla
+[ ] Haftada en az 3-5 video paylas (tutarlilik > mukemmeliyet)
+
+    Icerik fikirleri:
+    - "PERFECT Challenge" - Art arda kac PERFECT vurusu yapabilirsin?
+    - "Hardcore Mod Denemesi" - Tek can, tek hata, gerilim anlari
+    - "Ilk vs 100. Deneme" - Before/after gelisim anlatisi
+    - "Bu oyunu bitirebilen yok!" - Flappy Bird etkisi
+    - ASMR/Satisfying gameplay - Neon renkler, partikul patlamalari
+    - "Speed Rush En Yuksek Skor" yarismasi
+    - "Arkadasina Gonder" challenge formati
+
+[ ] Instagram Reels & YouTube Shorts'a cross-post
+[ ] 15-30 saniyelik kisa, tatmin edici gameplay klipleri hazirla
+
+7.2 Reddit & Discord
+--------------------------------------------------------------------------------
+[ ] r/iosgaming, r/AndroidGaming, r/IndieGaming, r/HyperCasualGames paylasimlari
+[ ] Gelistirme sureci devlog postlari
+[ ] Discord sunucusu kur (erken benimseyenler icin)
+
+7.3 App Store In-App Events
+--------------------------------------------------------------------------------
+[ ] Haftalik "Speed Rush Turnuvasi" etkinlikleri
+[ ] Sezonluk tema guncellemeleri (Halloween neon, Yilbasi temasi vb.)
+[ ] Yeni mod ve basarim acilis etkinlikleri
+
+7.4 Influencer & Cross-Promotion
+--------------------------------------------------------------------------------
+[ ] Mikro-influencer'lar (1K-50K takipci) ile is birligi
+[ ] Benzer indie gelistiricilerle karsilikli tanitim
+
+
+================================================================================
+8. RAKIP AVANTAJLARI - RINGLOCK'UN FARKLARI
+================================================================================
+
+Dogrudan rakipler (Ring Rush, Perfect Tap, Ring Master, Circle Tap, Zync) hepsi
+ZAYIF: tek mod, sinirli icerik, zayif ASO, guncellenmemis, gorsel kalite dusuk.
+
+RingLock'un farklari:
+[x] 6 farkli oyun modu (rakiplerde 1-2)
+[x] Combo sistemi + 22 basarim (derinlik)
+[x] 6 halka + 5 arka plan temasi (kisisellistirme)
+[x] Cyberpunk/neon gorsel kimlik (ayirt edici)
+[x] Haptic feedback + ses efektleri (premium his)
+[x] Erisilebilirlik ozellikleri (genis kitle)
+[x] Gunluk gorevler (retention)
+
+Bu avantajlari screenshot ve aciklamalarda mutlaka vurgula!
+
+
+================================================================================
+9. TEKNIK GELISTIRME GOREVLERI
+================================================================================
+
+9.1 Yerellestirme Altyapisi (i18n)
+--------------------------------------------------------------------------------
+[ ] i18n kutuphanesi entegre et (react-i18next veya benzeri)
+[ ] Tum hardcoded metinleri ceviri anahtarlarina donustur
+[ ] 7 dil icin ceviri dosyalari olustur (en, pt-BR, es, id, tr, ja, hi)
+[ ] Onboarding'e bayrakli ulke/dil secim ekrani ekle
+[ ] Ayarlar menusune dil degistirme secenegi ekle
+[ ] Dil secimini AsyncStorage'a kaydet
+
+9.2 Skor Paylasimi
+--------------------------------------------------------------------------------
+[ ] Game Over ekranina "Skorunu Paylas" butonu ekle
+[ ] Instagram Story, Twitter, genel paylasim secenekleri
+[ ] Paylasim gorseli olustur (skor + tema + marka)
+
+9.3 App Store Listing Hazirlik
+--------------------------------------------------------------------------------
+[ ] app.json / app.config icinde metadata guncelle
+[ ] Her locale icin Store listing dosyalari hazirla
+[ ] Privacy policy ve Terms of Service sayfalari
+
+
+================================================================================
+10. LANSMAN TAKVIMI
+================================================================================
+
+LANSMANDAN 4 HAFTA ONCE:
+[ ] App Store listing hazirla (ad, altyazi, keyword, aciklama, screenshot, video)
+[ ] Minimum 5 dilde yerellestirme tamamla (EN, PT-BR, ES, ID, TR)
+[ ] TikTok hesabi ac, teaser icerikleri paylasmaya basla
+[ ] Reddit'te devlog paylasimi baslat
+[ ] App Store'da pre-order / Google Play'de pre-register ac
+
+LANSMAN HAFTASI:
+[ ] Tum sosyal medyada es zamanli duyuru
+[ ] TikTok'ta "PERFECT Challenge" baslat
+[ ] Reddit gaming subreddit'lerinde launch post
+[ ] Ilk In-App Event yayinla
+[ ] Mikro-influencer'lara oyun gonder
+
+LANSMANDAN SONRA (SUREKLI):
+[ ] Haftalik ASO keyword performans analizi
+[ ] 2 haftada bir yeni In-App Event
+[ ] Haftada 3-5 TikTok/Reels/Shorts icerik
+[ ] Aylik screenshot ve ikon A/B testleri
+[ ] Kullanici yorumlarina hizli yanit (puan yukseltme)
+[ ] Aylik guncelleme (yeni tema, basarim, etkinlik)
+[ ] Retention metriklerini izle (D1, D7, D30)
+
+
+================================================================================
+11. KRITIK ONERILER OZETI (TOP 10)
+================================================================================
+
+#   | Alan              | Oneri
+----|-------------------|------------------------------------------------------
+1   | Oyun Adi          | "RingLock" koru, altyazida keyword kullan
+2   | Hedef Pazar       | ABD (gelir), Hindistan (hacim), Brezilya, Endonezya, TR
+3   | ASO               | Keyword alanini doldur, long-tail hedefle, 2 haftada guncelle
+4   | Yerellestirme     | Min. 5 dil, her dil icin ayri keyword ve screenshot
+5   | Viral Kanal       | TikTok #1 oncelik - PERFECT Challenge, ASMR gameplay
+6   | Monetizasyon      | Hybrid-casual: Rewarded ads + reklam kaldirma IAP + tema
+7   | Retention         | Gunluk gorevler, In-App Events, D1 > %40 hedefle
+8   | Rakip Avantaji    | Rakipler zayif - 6 mod + combo + tema ile fark yarat
+9   | Screenshot        | Ilk 3 kritik: PERFECT ani, mod cesitliligi, neon tasarim
+10  | LiveOps           | Sezonluk etkinlikler, yeni temalar, surekli guncelleme
+
+
+================================================================================
+                         HAZIRLAYAN: Claude AI
+                    Kaynak: Gemini + Claude + ChatGPT Raporlari
+                            21 Mart 2026
+================================================================================

@@ -16,6 +16,7 @@ import { musicManager } from "@/lib/music";
 import { SettingsProvider, useSettings } from "@/lib/SettingsContext";
 import { ThemeProvider } from "@/lib/ThemeContext";
 import { initI18n } from "@/lib/i18n";
+import { initAds } from "@/lib/ads";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -49,7 +50,11 @@ export default function RootLayout() {
   useEffect(() => {
     async function prepare() {
       try {
-        await Promise.all([soundManager.init(), musicManager.init(), initI18n()]);
+        if (Platform.OS === "ios") {
+          const { requestTrackingPermissionsAsync } = await import("expo-tracking-transparency");
+          await requestTrackingPermissionsAsync();
+        }
+        await Promise.all([soundManager.init(), musicManager.init(), initI18n(), initAds()]);
       } catch (e) {
         // silent — app must always open regardless of permission outcome
       } finally {

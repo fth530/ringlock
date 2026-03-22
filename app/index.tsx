@@ -32,6 +32,7 @@ import { LanguageSelectOverlay } from "@/components/LanguageSelectOverlay";
 import { useTheme } from "@/lib/ThemeContext";
 import { useSettings } from "@/lib/SettingsContext";
 import { hasCompletedOnboarding, markOnboardingDone } from "@/lib/i18n";
+import { isRewardedReady, showRewarded, trackGameForInterstitial, showInterstitial } from "@/lib/ads";
 
 // ─── Hit Quality Label ────────────────────────────────────────────────────────
 function HitQualityLabel({ quality }: { quality: HitQuality }) {
@@ -181,7 +182,7 @@ export default function GameScreen() {
     ringRadius, flashOpacity, targetScale, targetColor, anchorX, anchorY,
     ringRadius2, anchorX2, anchorY2, targetScale2, targetColor2,
     shakeAnim,
-    beginGame, handleRestart, handleMenu, handleScreenTap,
+    beginGame, handleRestart, handleMenu, handleScreenTap, continueAfterAd,
   } = useGameLoop(topPad, botPad);
 
   const [toastIndex, setToastIndex] = useState(0);
@@ -374,8 +375,33 @@ export default function GameScreen() {
           maxCombo={maxCombo}
           gameMode={gameMode}
           isNewRecord={isNewRecord}
-          onRestart={handleRestart}
-          onMenu={handleMenu}
+          onRestart={() => {
+            // Her 3 oyunda bir interstitial goster
+            if (trackGameForInterstitial()) {
+              showInterstitial(() => handleRestart());
+            } else {
+              handleRestart();
+            }
+          }}
+          onMenu={() => {
+            if (trackGameForInterstitial()) {
+              showInterstitial(() => handleMenu());
+            } else {
+              handleMenu();
+            }
+          }}
+          adReady={isRewardedReady()}
+          onWatchAd={() => {
+            showRewarded(
+              () => {
+                // Odul: +1 can ile skoru koruyarak devam et
+                continueAfterAd();
+              },
+              () => {
+                // Reklam kapandi (odul verilmese bile)
+              }
+            );
+          }}
         />
       )}
 
@@ -451,6 +477,7 @@ function getModeColor(mode: GameMode): string {
     case "speed":    return C.gold;
     case "mirror":   return "#00BFFF";
     case "dual":     return "#FF8C00";
+    case "chaos":    return "#FF00FF";
     default:         return C.cyan;
   }
 }

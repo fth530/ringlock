@@ -185,4 +185,10 @@ export default {
     "ach.total500.desc": "कुल 500 अंक जमा करें",
     selectLanguage: "भाषा चुनें",
     continueBtn: "जारी रखें",
+
+    chaosLabel: "CHAOS",
+    chaosDesc: "रैंडम स्पीड — हर रिंग सरप्राइज",
+    watchAdContinue: "विज्ञापन देखें → +1 जान",
+    watchAdUnlock: "▶ अनलॉक करने के लिए विज्ञापन देखें",
+    adLoading: "लोड हो रहा है...",
 };

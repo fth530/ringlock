@@ -185,4 +185,10 @@ export default {
     "ach.total500.desc": "Kumpulkan 500 total poin",
     selectLanguage: "PILIH BAHASA",
     continueBtn: "LANJUT",
+
+    chaosLabel: "CHAOS",
+    chaosDesc: "Kecepatan acak — setiap cincin kejutan",
+    watchAdContinue: "TONTON IKLAN → +1 NYAWA",
+    watchAdUnlock: "▶ Tonton iklan untuk membuka",
+    adLoading: "MEMUAT...",
 };

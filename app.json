@@ -21,14 +21,6 @@
         "ITSAppUsesNonExemptEncryption": false
       }
     },
-    "android": {
-      "package": "com.ringlock",
-      "versionCode": 1,
-      "adaptiveIcon": {
-        "backgroundColor": "#000000",
-        "foregroundImage": "./assets/icon.png"
-      }
-    },
     "web": {
       "favicon": "./assets/icon.png"
     },
@@ -41,11 +33,29 @@
           "microphonePermission": false
         }
       ],
-      "expo-localization"
+      [
+        "expo-tracking-transparency",
+        {
+          "userTrackingPermission": "This permission is used to show you relevant ads."
+        }
+      ],
+      "expo-localization",
+      [
+        "react-native-google-mobile-ads",
+        {
+          "iosAppId": "ca-app-pub-3876117181338566~4445272034"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "14308d5c-c022-4cae-91a9-146bcd322cc8"
+      }
     }
   }
 }

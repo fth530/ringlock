@@ -11,6 +11,7 @@ import { C } from "@/constants/game";
 import {
     RING_THEMES, BG_THEMES, isThemeUnlocked, useTheme, RingTheme, BgTheme,
 } from "@/lib/ThemeContext";
+import { isRewardedReady, showRewarded } from "@/lib/ads";
 
 const { width: SW } = Dimensions.get("window");
 const CARD_W = Math.min(SW - 48, 340);
@@ -44,24 +45,26 @@ function RingThemeCard({
     isActive,
     isUnlocked,
     onPress,
+    onAdUnlock,
     translatedName,
 }: {
     theme: RingTheme;
     isActive: boolean;
     isUnlocked: boolean;
     onPress: () => void;
+    onAdUnlock?: () => void;
     translatedName: string;
 }) {
     const { t } = useTranslation();
     return (
         <Pressable
-            onPress={isUnlocked ? onPress : undefined}
+            onPress={isUnlocked ? onPress : onAdUnlock}
             style={({ pressed }) => [
                 tc.themeCard,
                 { width: ITEM_W, borderColor: isActive ? theme.color : "rgba(255,255,255,0.07)" },
                 isActive && { backgroundColor: `${theme.color}12` },
-                pressed && isUnlocked && { opacity: 0.75 },
-                !isUnlocked && { opacity: 0.4 },
+                pressed && { opacity: 0.75 },
+                !isUnlocked && { opacity: 0.5 },
             ]}
         >
             <View style={[tc.colorDot, { backgroundColor: isUnlocked ? theme.color : "#555", borderColor: isUnlocked ? theme.borderGlow : "transparent" }]} />
@@ -69,7 +72,7 @@ function RingThemeCard({
             <Text style={[tc.cardLabel, isActive && { color: theme.color }]} numberOfLines={1}>
                 {translatedName}
             </Text>
-            {!isUnlocked && <Text style={tc.lockIcon}>🔒</Text>}
+            {!isUnlocked && <Text style={tc.lockIcon}>▶</Text>}
             {isActive && <Text style={[tc.activeTag, { color: theme.color }]}>{t("active")}</Text>}
         </Pressable>
     );
@@ -80,24 +83,26 @@ function BgThemeCard({
     isActive,
     isUnlocked,
     onPress,
+    onAdUnlock,
     translatedName,
 }: {
     theme: BgTheme;
     isActive: boolean;
     isUnlocked: boolean;
     onPress: () => void;
+    onAdUnlock?: () => void;
     translatedName: string;
 }) {
     const { t } = useTranslation();
     return (
         <Pressable
-            onPress={isUnlocked ? onPress : undefined}
+            onPress={isUnlocked ? onPress : onAdUnlock}
             style={({ pressed }) => [
                 tc.themeCard,
                 { width: ITEM_W, borderColor: isActive ? theme.accentColor : "rgba(255,255,255,0.07)" },
                 isActive && { backgroundColor: `${theme.accentColor}10` },
-                pressed && isUnlocked && { opacity: 0.75 },
-                !isUnlocked && { opacity: 0.4 },
+                pressed && { opacity: 0.75 },
+                !isUnlocked && { opacity: 0.5 },
             ]}
         >
             <View style={[tc.bgPreview, {
@@ -108,7 +113,7 @@ function BgThemeCard({
             <Text style={[tc.cardLabel, isActive && { color: theme.accentColor }]} numberOfLines={1}>
                 {translatedName}
             </Text>
-            {!isUnlocked && <Text style={tc.lockIcon}>🔒</Text>}
+            {!isUnlocked && <Text style={tc.lockIcon}>▶</Text>}
             {isActive && <Text style={[tc.activeTag, { color: theme.accentColor }]}>{t("active")}</Text>}
         </Pressable>
     );
@@ -118,7 +123,24 @@ export function ThemeOverlay({ onClose }: { onClose: () => void }) {
     const { t } = useTranslation();
     const { activeRingId, activeBgId, setRingTheme, setBgTheme } = useTheme();
     const [stats, setStats] = useState<UnlockStats>({ bestScore: 0, totalGames: 0 });
+    const [adUnlockedThemes, setAdUnlockedThemes] = useState<Set<string>>(new Set());
     const opacity = useSharedValue(0);
+
+    const isUnlockedOrAd = (unlockKey: string, themeId: string) => {
+        return isThemeUnlocked(unlockKey, stats) || adUnlockedThemes.has(themeId);
+    };
+
+    const handleAdUnlockTheme = (themeId: string, onUnlock: () => void) => {
+        if (!isRewardedReady()) return;
+        showRewarded(
+            () => {
+                AsyncStorage.setItem(`ringlock_theme_ad_${themeId}`, "1");
+                setAdUnlockedThemes((prev) => new Set(prev).add(themeId));
+                onUnlock();
+            },
+            () => {}
+        );
+    };
 
     const themeNameKeys: Record<string, string> = {
         pink: "theme.neonPink", cyan: "theme.cyberBlue", gold: "theme.gold",
@@ -130,6 +152,13 @@ export function ThemeOverlay({ onClose }: { onClose: () => void }) {
     useEffect(() => {
         opacity.value = withTiming(1, { duration: 300 });
         loadStats().then(setStats);
+        // Load ad-unlocked themes
+        const allIds = [...RING_THEMES, ...BG_THEMES].map((t) => t.id);
+        Promise.all(allIds.map((id) => AsyncStorage.getItem(`ringlock_theme_ad_${id}`))).then((vals) => {
+            const set = new Set<string>();
+            allIds.forEach((id, i) => { if (vals[i] === "1") set.add(id); });
+            setAdUnlockedThemes(set);
+        });
     }, []);
 
     const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
@@ -157,8 +186,9 @@ export function ThemeOverlay({ onClose }: { onClose: () => void }) {
                                 key={rt.id}
                                 theme={rt}
                                 isActive={rt.id === activeRingId}
-                                isUnlocked={isThemeUnlocked(rt.unlockKey, stats)}
+                                isUnlocked={isUnlockedOrAd(rt.unlockKey, rt.id)}
                                 onPress={() => setRingTheme(rt.id)}
+                                onAdUnlock={() => handleAdUnlockTheme(rt.id, () => setRingTheme(rt.id))}
                                 translatedName={t(themeNameKeys[rt.id])}
                             />
                         ))}
@@ -172,8 +202,9 @@ export function ThemeOverlay({ onClose }: { onClose: () => void }) {
                                 key={bt.id}
                                 theme={bt}
                                 isActive={bt.id === activeBgId}
-                                isUnlocked={isThemeUnlocked(bt.unlockKey, stats)}
+                                isUnlocked={isUnlockedOrAd(bt.unlockKey, bt.id)}
                                 onPress={() => setBgTheme(bt.id)}
+                                onAdUnlock={() => handleAdUnlockTheme(bt.id, () => setBgTheme(bt.id))}
                                 translatedName={t(themeNameKeys[bt.id])}
                             />
                         ))}

@@ -51,7 +51,7 @@ export type Phase = "menu" | "playing" | "gameover";
 export type HitQuality = "perfect" | "good" | "late" | null;
 
 // ─── Game Modes ──────────────────────────────────────────────────────────────
-export type GameMode = "classic" | "hardcore" | "zen" | "speed" | "mirror" | "dual";
+export type GameMode = "classic" | "hardcore" | "zen" | "speed" | "mirror" | "dual" | "chaos";
 
 export interface GameModeConfig {
   key: GameMode;
@@ -64,7 +64,9 @@ export interface GameModeConfig {
   durStep: number;
   isMirror?: boolean;   // ring grows instead of shrinks
   isDual?: boolean;     // two rings simultaneously
+  isChaos?: boolean;    // random speed each ring
   unlockScore?: number; // any-mode best score needed to unlock
+  unlockByAd?: boolean; // reklam izleyerek acilabilir
 }
 
 export const GAME_MODES: Record<GameMode, GameModeConfig> = {
@@ -119,6 +121,7 @@ export const GAME_MODES: Record<GameMode, GameModeConfig> = {
     durStep: DUR_STEP - 16,
     isMirror: true,
     unlockScore: 10,
+    unlockByAd: true,
   },
   dual: {
     key: "dual",
@@ -131,5 +134,18 @@ export const GAME_MODES: Record<GameMode, GameModeConfig> = {
     durStep: DUR_STEP - 10,
     isDual: true,
     unlockScore: 25,
+    unlockByAd: true,
+  },
+  chaos: {
+    key: "chaos",
+    label: "CHAOS",
+    description: "Rastgele hız — her halka sürpriz",
+    lives: MAX_LIVES,
+    timeLimitSec: 0,
+    initialDur: INITIAL_DUR,
+    minDur: MIN_DUR,
+    durStep: DUR_STEP,
+    isChaos: true,
+    unlockByAd: true,
   },
 };

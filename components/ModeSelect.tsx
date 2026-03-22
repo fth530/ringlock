@@ -3,8 +3,11 @@ import { View, Text, Pressable, StyleSheet, ScrollView } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTranslation } from "react-i18next";
 import { C, GameMode, GAME_MODES } from "@/constants/game";
+import { isRewardedReady, showRewarded } from "@/lib/ads";
 
-const MODE_ORDER: GameMode[] = ["classic", "hardcore", "zen", "speed", "mirror", "dual"];
+const AD_UNLOCK_PREFIX = "ringlock_ad_unlock_";
+
+const MODE_ORDER: GameMode[] = ["classic", "hardcore", "zen", "speed", "mirror", "dual", "chaos"];
 
 const MODE_COLORS: Record<GameMode, string> = {
     classic: C.cyan,
@@ -13,6 +16,7 @@ const MODE_COLORS: Record<GameMode, string> = {
     speed: C.gold,
     mirror: "#00BFFF",
     dual: "#FF8C00",
+    chaos: "#FF00FF",
 };
 
 async function loadBestAnyMode(): Promise<number> {
@@ -23,9 +27,18 @@ async function loadBestAnyMode(): Promise<number> {
         "ringlock_best_speed",
         "ringlock_best_mirror",
         "ringlock_best_dual",
+        "ringlock_best_chaos",
     ];
     const vals = await Promise.all(keys.map((k) => AsyncStorage.getItem(k)));
     return Math.max(0, ...vals.map((v) => (v ? parseInt(v, 10) : 0)));
+}
+
+async function loadAdUnlocks(): Promise<Set<string>> {
+    const keys = MODE_ORDER.filter((m) => GAME_MODES[m].unlockByAd);
+    const vals = await Promise.all(keys.map((k) => AsyncStorage.getItem(AD_UNLOCK_PREFIX + k)));
+    const set = new Set<string>();
+    keys.forEach((k, i) => { if (vals[i] === "1") set.add(k); });
+    return set;
 }
 
 export function ModeSelect({
@@ -37,25 +50,46 @@ export function ModeSelect({
 }) {
     const { t } = useTranslation();
     const [bestAny, setBestAny] = useState<number | null>(null);
+    const [adUnlocked, setAdUnlocked] = useState<Set<string>>(new Set());
 
     const modeDescKey: Record<string, string> = {
         classic: "classicDesc", hardcore: "hardcoreDesc", zen: "zenDesc",
         speed: "speedDesc", mirror: "mirrorDesc", dual: "dualDesc",
+        chaos: "chaosDesc",
     };
     const modeLabelKey: Record<string, string> = {
         classic: "classicLabel", hardcore: "hardcoreLabel", zen: "zenLabel",
         speed: "speedLabel", mirror: "mirrorLabel", dual: "dualLabel",
+        chaos: "chaosLabel",
     };
 
     useEffect(() => {
         loadBestAnyMode().then(setBestAny);
+        loadAdUnlocks().then(setAdUnlocked);
     }, []);
 
     const isUnlocked = (key: GameMode): boolean => {
         const cfg = GAME_MODES[key];
-        if (!cfg.unlockScore) return true;
-        if (bestAny === null) return false;
-        return bestAny >= cfg.unlockScore;
+        if (adUnlocked.has(key)) return true;
+        if (!cfg.unlockScore && !cfg.unlockByAd) return true;
+        if (cfg.unlockScore && bestAny !== null && bestAny >= cfg.unlockScore) return true;
+        return false;
+    };
+
+    const canUnlockByAd = (key: GameMode): boolean => {
+        const cfg = GAME_MODES[key];
+        return !!cfg.unlockByAd && !isUnlocked(key);
+    };
+
+    const handleAdUnlock = (key: GameMode) => {
+        showRewarded(
+            () => {
+                // Reklam izlendi — modu kalici olarak ac
+                AsyncStorage.setItem(AD_UNLOCK_PREFIX + key, "1");
+                setAdUnlocked((prev) => new Set(prev).add(key));
+            },
+            () => { /* kapandi */ }
+        );
     };
 
     return (
@@ -72,18 +106,22 @@ export function ModeSelect({
                     const mode = GAME_MODES[key];
                     const color = MODE_COLORS[key];
                     const unlocked = isUnlocked(key);
+                    const showAdBtn = canUnlockByAd(key);
 
                     return (
                         <Pressable
                             key={key}
                             accessibilityRole="button"
                             accessibilityLabel={unlocked ? `Play ${mode.label}` : `${mode.label} locked`}
-                            onPress={() => { if (unlocked) onSelect(key); }}
+                            onPress={() => {
+                                if (unlocked) onSelect(key);
+                                else if (showAdBtn && isRewardedReady()) handleAdUnlock(key);
+                            }}
                             style={({ pressed }) => [
                                 s.modeBtn,
                                 {
                                     borderColor: unlocked ? color : "rgba(255,255,255,0.12)",
-                                    opacity: unlocked ? (pressed ? 0.65 : 1) : 0.5,
+                                    opacity: unlocked ? (pressed ? 0.65 : 1) : 0.6,
                                 },
                             ]}
                         >
@@ -98,7 +136,9 @@ export function ModeSelect({
                             <Text style={[s.modeDesc, { color: unlocked ? `${color}99` : "rgba(255,255,255,0.2)" }]}>
                                 {unlocked
                                     ? t(modeDescKey[key])
-                                    : t("unlockWith", { score: mode.unlockScore })}
+                                    : showAdBtn
+                                        ? t("watchAdUnlock")
+                                        : t("unlockWith", { score: mode.unlockScore })}
                             </Text>
                         </Pressable>
                     );

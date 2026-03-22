@@ -218,4 +218,13 @@ export default {
     // Language Select
     selectLanguage: "SELECT LANGUAGE",
     continueBtn: "CONTINUE",
+
+    // Game Modes (new)
+    chaosLabel: "CHAOS",
+    chaosDesc: "Random speed — every ring is a surprise",
+
+    // Ads
+    watchAdContinue: "WATCH AD → +1 LIFE",
+    watchAdUnlock: "▶ Watch ad to unlock",
+    adLoading: "LOADING AD...",
 };
