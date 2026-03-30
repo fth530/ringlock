@@ -47,7 +47,7 @@ export const C = {
   purpleMid: "#1a0a2e",
 };
 
-export type Phase = "menu" | "playing" | "gameover";
+export type Phase = "menu" | "playing" | "gameover" | "countdown";
 export type HitQuality = "perfect" | "good" | "late" | null;
 
 // ─── Game Modes ──────────────────────────────────────────────────────────────

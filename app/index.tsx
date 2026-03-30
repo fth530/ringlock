@@ -5,6 +5,7 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
   withSequence,
+  withSpring,
   Easing,
 } from "react-native-reanimated";
 import { StatusBar } from "expo-status-bar";
@@ -33,6 +34,42 @@ import { useTheme } from "@/lib/ThemeContext";
 import { useSettings } from "@/lib/SettingsContext";
 import { hasCompletedOnboarding, markOnboardingDone } from "@/lib/i18n";
 import { isRewardedReady, showRewarded, trackGameForInterstitial, showInterstitial } from "@/lib/ads";
+
+// ─── Countdown Overlay (after ad) ─────────────────────────────────────────────
+function CountdownOverlay({ count }: { count: number }) {
+  const scale = useSharedValue(2.5);
+  const opacity = useSharedValue(0);
+
+  useEffect(() => {
+    // Her sayı değiştiğinde: büyükten küçüğe animasyon
+    scale.value = 2.5;
+    opacity.value = 0;
+    scale.value = withSpring(1, { damping: 12, stiffness: 200 });
+    opacity.value = withTiming(1, { duration: 150 });
+  }, [count]);
+
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
+
+  return (
+    <View style={{
+      ...StyleSheet.absoluteFillObject,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: "rgba(0,0,0,0.4)",
+      zIndex: 100,
+    }} pointerEvents="none">
+      <Animated.Text style={[{
+        fontSize: 120,
+        fontFamily: "Orbitron_900Black",
+        color: "#FFFFFF",
+        opacity: 0.9,
+      }, animStyle]}>{count}</Animated.Text>
+    </View>
+  );
+}
 
 // ─── Hit Quality Label ────────────────────────────────────────────────────────
 function HitQualityLabel({ quality }: { quality: HitQuality }) {
@@ -182,7 +219,7 @@ export default function GameScreen() {
     ringRadius, flashOpacity, targetScale, targetColor, anchorX, anchorY,
     ringRadius2, anchorX2, anchorY2, targetScale2, targetColor2,
     shakeAnim,
-    beginGame, handleRestart, handleMenu, handleScreenTap, continueAfterAd,
+    beginGame, handleRestart, handleMenu, handleScreenTap, prepareForAdContinue, continueAfterAd, countdown,
   } = useGameLoop(topPad, botPad);
 
   const [toastIndex, setToastIndex] = useState(0);
@@ -202,7 +239,7 @@ export default function GameScreen() {
   }, [newAchievements]);
 
   const modeConfig = GAME_MODES[gameMode];
-  const showRings = phase === "playing" || phase === "gameover";
+  const showRings = phase === "playing" || phase === "gameover" || phase === "countdown";
   const bgColors = visualPhase <= 1 ? activeBg.colors : getPhaseColors(visualPhase);
 
   const onPlay = () => setShowModeSelect(true);
@@ -367,6 +404,11 @@ export default function GameScreen() {
         <ModeSelect onSelect={onModeSelect} onBack={onModeBack} />
       )}
 
+      {/* Countdown overlay after ad — shown over the last game state */}
+      {phase === "countdown" && countdown > 0 && (
+        <CountdownOverlay count={countdown} />
+      )}
+
       {/* Game over */}
       {phase === "gameover" && (
         <GameOverOverlay
@@ -392,13 +434,19 @@ export default function GameScreen() {
           }}
           adReady={isRewardedReady()}
           onWatchAd={() => {
+            let rewarded = false;
+            // Hemen game over'ı gizle, oyun ekranını göster
+            prepareForAdContinue();
             showRewarded(
               () => {
-                // Odul: +1 can ile skoru koruyarak devam et
-                continueAfterAd();
+                // Odul kazanildi
+                rewarded = true;
               },
               () => {
-                // Reklam kapandi (odul verilmese bile)
+                // Reklam kapandi — odul verildiyse 3-2-1 baslat
+                if (rewarded) {
+                  continueAfterAd();
+                }
               }
             );
           }}

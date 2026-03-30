@@ -50,16 +50,12 @@ export default function RootLayout() {
   useEffect(() => {
     async function prepare() {
       try {
-        if (Platform.OS === "ios") {
-          const { requestTrackingPermissionsAsync } = await import("expo-tracking-transparency");
-          await requestTrackingPermissionsAsync();
-        }
         await Promise.all([soundManager.init(), musicManager.init(), initI18n(), initAds()]);
-      } catch (e) {
-        // silent — app must always open regardless of permission outcome
-      } finally {
-        setAppIsReady(true);
+      } catch (_) {
+        // Non-critical init errors — app must always open
       }
+
+      setAppIsReady(true);
     }
 
     prepare();

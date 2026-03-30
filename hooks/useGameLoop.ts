@@ -61,6 +61,7 @@ export function useGameLoop(topPad: number, botPad: number) {
     const [perfectPos, setPerfectPos] = useState<{ x: number; y: number }>({ x: SCREEN_W / 2, y: SCREEN_H / 2 });
     const [isNewRecord, setIsNewRecord] = useState(false);
     const [isDualMode, setIsDualMode] = useState(false);
+    const [countdown, setCountdown] = useState(0);
 
     const phaseRef = useRef<Phase>("menu");
     const perfectCountRef = useRef(0);
@@ -414,6 +415,7 @@ export function useGameLoop(topPad: number, botPad: number) {
         setIsNewRecord(false);
         setPhase("playing");
 
+        gameStartTimeRef.current = Date.now();
         clearTimer();
         if (config.timeLimitSec > 0) {
             timeLeftRef.current = config.timeLimitSec;
@@ -438,22 +440,41 @@ export function useGameLoop(topPad: number, botPad: number) {
         beginGame(modeRef.current);
     }, [ringRadius, ringRadius2, beginGame]);
 
-    const continueAfterAd = useCallback(() => {
-        // Skoru koru, +1 can ver, yavas halkayla basla (rahat giris)
+    // Reklam izle butonuna basıldığında çağır — game over'ı hemen gizle
+    const prepareForAdContinue = useCallback(() => {
         cancelAnimation(ringRadius);
         cancelAnimation(ringRadius2);
-        phaseRef.current = "playing";
         livesRef.current = 1;
         comboRef.current = 0;
         dualMissedRef.current = false;
         setLives(1);
         setCombo(0);
         setHitQuality(null);
-        setPhase("playing");
         setNewAchievements([]);
-        // Halkayi yavas baslat — kisi hemen yanmasin
-        const easyDur = Math.max(durRef.current, GAME_MODES[modeRef.current].initialDur);
-        spawnRing(easyDur);
+        // Phase'i countdown'a çek — game over kapanır, oyun ekranı görünür
+        phaseRef.current = "countdown";
+        setPhase("countdown");
+        setCountdown(0); // henüz sayma — reklam açık
+    }, [ringRadius, ringRadius2]);
+
+    // Reklam kapandığında çağır — 3-2-1 geri sayımı başlat
+    const continueAfterAd = useCallback(() => {
+        setCountdown(3);
+        let count = 3;
+        const countdownInterval = setInterval(() => {
+            count -= 1;
+            if (count > 0) {
+                setCountdown(count);
+            } else {
+                clearInterval(countdownInterval);
+                setCountdown(0);
+                phaseRef.current = "playing";
+                setPhase("playing");
+                gameStartTimeRef.current = Date.now();
+                const easyDur = Math.max(durRef.current, GAME_MODES[modeRef.current].initialDur);
+                spawnRing(easyDur);
+            }
+        }, 1000);
     }, [ringRadius, ringRadius2, spawnRing]);
 
     const handleMenu = useCallback(() => {
@@ -475,9 +496,12 @@ export function useGameLoop(topPad: number, botPad: number) {
     }, [ringRadius, ringRadius2, clearTimer, saveBest]);
 
     const lastTapRef = useRef(0);
+    const gameStartTimeRef = useRef(0);
     const handleScreenTap = useCallback(() => {
         if (phaseRef.current !== "playing") return;
         const now = Date.now();
+        // Ignore taps within 500ms of game start to prevent touch bleed from mode select / ads
+        if (now - gameStartTimeRef.current < 500) return;
         if (now - lastTapRef.current < 80) return;
         lastTapRef.current = now;
 
@@ -556,6 +580,6 @@ export function useGameLoop(topPad: number, botPad: number) {
         ringRadius, flashOpacity, targetScale, targetColor, anchorX, anchorY,
         ringRadius2, anchorX2, anchorY2, targetScale2, targetColor2,
         shakeAnim,
-        beginGame, handleRestart, handleMenu, handleScreenTap, continueAfterAd,
+        beginGame, handleRestart, handleMenu, handleScreenTap, prepareForAdContinue, continueAfterAd, countdown,
     };
 }

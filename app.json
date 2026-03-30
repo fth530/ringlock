@@ -2,7 +2,7 @@
   "expo": {
     "name": "RingLock",
     "slug": "ringlock",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "ringlock",
@@ -16,7 +16,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.corut.ringlock",
-      "buildNumber": "1",
+      "buildNumber": "6",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -31,12 +31,6 @@
         "expo-av",
         {
           "microphonePermission": false
-        }
-      ],
-      [
-        "expo-tracking-transparency",
-        {
-          "userTrackingPermission": "This permission is used to show you relevant ads."
         }
       ],
       "expo-localization",
